@@ -4,6 +4,7 @@
 %% API
 -export([ start_link/0
         , get_room_list/1
+        , create_room/2
         , say/3
         , message/2
         ]).
@@ -37,6 +38,9 @@ start_link() ->
 
 get_room_list(User) ->
     gen_server:call(User, room_list).
+
+create_room(User, Name) ->
+    gen_server:call(User, {create_room, Name}).
 
 say(User, Room, Message) ->
     gen_server:cast(User, {say, Room, Message}).
@@ -85,6 +89,10 @@ init([SocketController]) ->
 handle_call(room_list, _From, S = #user{joined_rooms = Rooms}) ->
     Reply = {ok, Rooms},
     {reply, Reply, S};
+
+handle_call({create_room, Name}, _From, S) ->
+    room_sup:start_room(Name),
+    {reply, ok, S};
 
 handle_call(_Request, _From, State) ->
     Reply = ok,

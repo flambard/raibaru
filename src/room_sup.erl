@@ -3,7 +3,7 @@
 
 %% API
 -export([ start_link/0
-        , start_room/0
+        , start_room/1
         ]).
 
 %% Supervisor callbacks
@@ -18,8 +18,8 @@
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
-start_room() ->
-    supervisor:start_child(?SERVER, []).
+start_room(Name) ->
+    supervisor:start_child(?SERVER, [Name]).
 
 
 %%%===================================================================

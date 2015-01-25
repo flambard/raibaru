@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API
--export([ start_link/0
+-export([ start_link/1
         , join/1
         , leave/1
         , say/2
@@ -18,15 +18,16 @@
         ]).
 
 -record(room,
-        { users = []
+        { name
+        , users = []
         }).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
-start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+start_link(Name) ->
+    gen_server:start_link(?MODULE, [Name], []).
 
 join(Room) ->
     gen_server:call(Room, join).
@@ -52,8 +53,9 @@ say(Room, Message) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([]) ->
-    {ok, #room{}}.
+init([Name]) ->
+    ok = lobby:register_room(self()),
+    {ok, #room{name = Name}}.
 
 %%--------------------------------------------------------------------
 %% @private
