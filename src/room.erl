@@ -58,7 +58,7 @@ say(Room, Message) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Name]) ->
-    ok = lobby:register_room(self()),
+    ok = lobby:register_room(self(), Name),
     {ok, #room{name = Name}}.
 
 %%--------------------------------------------------------------------

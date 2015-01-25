@@ -4,7 +4,7 @@
 %% API
 -export([ start_link/0
         , get_rooms/0
-        , register_room/1
+        , register_room/2
         ]).
 
 %% gen_server callbacks
@@ -33,8 +33,8 @@ start_link() ->
 get_rooms() ->
     gen_server:call(?SERVER, rooms).
 
-register_room(Pid) ->
-    gen_server:cast(?SERVER, {new_room, Pid}).
+register_room(Pid, Name) ->
+    gen_server:cast(?SERVER, {new_room, Pid, Name}).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -86,9 +86,9 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_cast({new_room, Pid}, S = #lobby{rooms = Rooms}) ->
+handle_cast({new_room, Pid, Name}, S = #lobby{rooms = Rooms}) ->
     monitor(process, Pid),
-    {noreply, S#lobby{rooms = [Pid | Rooms]}};
+    {noreply, S#lobby{rooms = [{Pid, Name} | Rooms]}};
 
 handle_cast(_Msg, State) ->
     {noreply, State}.
@@ -104,7 +104,7 @@ handle_cast(_Msg, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_info({'DOWN', _Monitor, _Type, Pid, _Info}, S = #lobby{rooms = Rooms}) ->
-    {noreply, S#lobby{rooms = lists:delete(Pid, Rooms)}};
+    {noreply, S#lobby{rooms = lists:keydelete(Pid, 1, Rooms)}};
 
 handle_info(_Info, State) ->
     {noreply, State}.
