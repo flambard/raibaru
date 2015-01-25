@@ -3,6 +3,7 @@
 
 %% API
 -export([ start_link/1
+        , send_message/2
         ]).
 
 %% gen_server callbacks
@@ -26,6 +27,9 @@
 start_link(Socket) ->
     gen_server:start_link(?MODULE, [Socket], []).
 
+send_message(SC, Message) ->
+    gen_server:call(SC, {send, Message}).
+
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -44,6 +48,7 @@ start_link(Socket) ->
 %%--------------------------------------------------------------------
 init([Socket]) ->
     {ok, Pid} = user_controller:start_link(),
+    ok = inet:setopts(Socket, [{active, once}]),
     {ok, #socket_controller{ socket = Socket
                            , user_controller = Pid
                            }}.
@@ -62,6 +67,10 @@ init([Socket]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call({send, Message}, _From, S = #socket_controller{socket = Socket}) ->
+    ok = gen_tcp:send(Socket, Message),
+    {reply, ok, S};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -89,6 +98,14 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({tcp_closed, _Socket}, State) ->
+    {stop, tcp_closed, State};
+
+handle_info({tcp, Socket, _Data}, State) ->
+    inet:setopts(Socket, [{active, once}]),
+    %% TODO: Parse message and handle
+    {noreply, State};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 
