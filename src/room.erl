@@ -3,6 +3,7 @@
 
 %% API
 -export([ start_link/1
+        , get_users_list/1
         , join/1
         , leave/1
         , say/2
@@ -28,6 +29,9 @@
 
 start_link(Name) ->
     gen_server:start_link(?MODULE, [Name], []).
+
+get_users_list(Room) ->
+    gen_server:call(Room, get_users_list).
 
 join(Room) ->
     gen_server:call(Room, join).
@@ -71,6 +75,9 @@ init([Name]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(get_users_list, _From, S = #room{users = Users}) ->
+    {reply, {ok, Users}, S};
+
 handle_call(join, From, S = #room{users = Users}) ->
     Monitor = monitor(process, From),
     {reply, ok, S#room{users = [{From, Monitor} | Users]}};
