@@ -121,6 +121,9 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({'DOWN', _Monitor, _Type, Pid, _Info}, S = #room{users = Users}) ->
+    {noreply, S#room{users = lists:keydelete(Pid, 1, Users)}};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 
