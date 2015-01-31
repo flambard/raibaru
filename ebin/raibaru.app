@@ -6,6 +6,8 @@
             , lobby
             , room_sup
             , room
+            , game
+            , game_sup
             , user_controller
             , socket_listener_sup
             , socket_listener
@@ -15,6 +17,7 @@
   {registered, [ raibaru_sup
                , lobby
                , room_sup
+               , game_sup
                , socket_listener_sup
                , socket_controller_sup
                ]},

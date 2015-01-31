@@ -39,6 +39,13 @@ init([]) ->
                supervisor,
                [room_sup]},
 
+    GameSup = {game_sup,
+               {game_sup, start_link, []},
+               permanent,
+               2000,
+               supervisor,
+               [game_sup]},
+
     SocketControllerSup = {socket_controller_sup,
                            {socket_controller_sup, start_link, []},
                            permanent,
@@ -56,6 +63,7 @@ init([]) ->
     {ok, {SupFlags,
           [ Lobby
           , RoomSup
+          , GameSup
           , SocketControllerSup
           , SocketListenerSup
           ]}}.
