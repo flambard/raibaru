@@ -85,7 +85,7 @@ handle_call(join, From, S = #room{users = Users}) ->
 handle_call(leave, From, S = #room{users = Users}) ->
     {From, Monitor} = lists:keyfind(From, 1, Users),
     demonitor(Monitor),
-    {reply, ok, S#room{users = lists:delete(Users, 1, From)}};
+    {reply, ok, S#room{users = lists:keydelete(Users, 1, From)}};
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
@@ -103,7 +103,7 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast({message, Message}, S = #room{users = Users}) ->
     lists:foreach(fun({User, _Monitor}) ->
-                          user:message(User, Message)
+                          user_controller:message(User, Message)
                   end,
                   Users),
     {noreply, S};
