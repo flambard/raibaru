@@ -4,6 +4,7 @@
 %% API
 -export([ start_link/1
         , send_message/2
+        , send_game_invitation_accepted/3
         ]).
 
 %% gen_server callbacks
@@ -30,6 +31,8 @@ start_link(Socket) ->
 send_message(SC, Message) ->
     gen_server:call(SC, {send, Message}).
 
+send_game_invitation_accepted(SC, Invitation, Opponent) ->
+    gen_server:call(SC, {send, {Invitation, Opponent}}).
 
 %%%===================================================================
 %%% gen_server callbacks

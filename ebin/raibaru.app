@@ -7,6 +7,7 @@
             , room_sup
             , room
             , game
+            , game_invitation
             , game_sup
             , user_controller
             , socket_listener_sup

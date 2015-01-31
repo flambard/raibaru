@@ -6,7 +6,9 @@
         , get_room_list/1
         , create_room/2
         , say/3
+        , accept_game_invitation/2
         , message/2
+        , game_invitation_accepted/3
         ]).
 
 %% gen_server callbacks
@@ -45,6 +47,9 @@ create_room(User, Name) ->
 say(User, Room, Message) ->
     gen_server:cast(User, {say, Room, Message}).
 
+accept_game_invitation(User, Invitation) ->
+    gen_server:call(User, {accept_game_invitation, Invitation}).
+
 
 %%%
 %%% Server API
@@ -52,6 +57,9 @@ say(User, Room, Message) ->
 
 message(User, Message) ->
     gen_server:cast(User, {message, Message}).
+
+game_invitation_accepted(User, Invitation, Opponent) ->
+    gen_server:cast(User, {game_invitation_accepted, Invitation, Opponent}).
 
 
 %%%===================================================================
@@ -94,6 +102,10 @@ handle_call({create_room, Name}, _From, S) ->
     room_sup:start_room(Name),
     {reply, ok, S};
 
+handle_call({accept_game_invitation, Invitation}, _From, S) ->
+    game_sup:accept_invitation(Invitation),
+    {reply, ok, S};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -114,6 +126,11 @@ handle_cast({say, Room, Message}, State) ->
 
 handle_cast({message, Message}, S = #user{socket_controller = SC}) ->
     socket_controller:send_message(SC, Message),
+    {noreply, S};
+
+handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->
+    SC = S#user.socket_controller,
+    socket_controller:send_game_invitation_accepted(SC, Invitation, Opponent),
     {noreply, S};
 
 handle_cast(_Msg, State) ->
