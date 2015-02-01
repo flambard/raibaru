@@ -5,6 +5,7 @@
 -export([ start_link/1
         , send_message/2
         , send_game_invitation_accepted/3
+        , send_game_invitation_denied/3
         ]).
 
 %% gen_server callbacks
@@ -32,7 +33,11 @@ send_message(SC, Message) ->
     gen_server:call(SC, {send, Message}).
 
 send_game_invitation_accepted(SC, Invitation, Opponent) ->
-    gen_server:call(SC, {send, {Invitation, Opponent}}).
+    gen_server:call(SC, {send, {accepted, Invitation, Opponent}}).
+
+send_game_invitation_denied(SC, Invitation, Opponent) ->
+    gen_server:call(SC, {send, {denied, Invitation, Opponent}}).
+
 
 %%%===================================================================
 %%% gen_server callbacks
