@@ -3,12 +3,18 @@
 
 %% API
 -export([ start_link/0
-        , get_room_list/1
+        ]).
+
+%% Client API
+-export([ get_room_list/1
         , create_room/2
         , say/3
         , accept_game_invitation/2
         , deny_game_invitation/2
-        , message/2
+        ]).
+
+%% Server API
+-export([ message/2
         , game_invitation_accepted/3
         , game_invitation_denied/3
         ]).
