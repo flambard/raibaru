@@ -16,7 +16,7 @@
 
 %% Server API
 -export([ message/2
-        , game_invitation/3
+        , game_invitation/2
         , game_invitation_accepted/3
         , game_invitation_denied/3
         ]).
@@ -74,8 +74,8 @@ invite_to_game(User, Opponent) ->
 message(User, Message) ->
     gen_server:cast(User, {message, Message}).
 
-game_invitation(User, Invitation, Opponent) ->
-    gen_server:cast(User, {game_invitation, Invitation, Opponent}).
+game_invitation(User, Invitation) ->
+    gen_server:cast(User, {game_invitation, Invitation}).
 
 game_invitation_accepted(User, Invitation, Opponent) ->
     gen_server:cast(User, {game_invitation_accepted, Invitation, Opponent}).
@@ -129,13 +129,13 @@ handle_call({accept_game_invitation, Invitation}, _From, S) ->
     {reply, ok, S};
 
 handle_call({deny_game_invitation, Invitation}, _From, S) ->
-    Opponent = undefined, %% TODO: Is the opponent included in the invitation?
+    Opponent = game_invitation:challenger(Invitation),
     user_controller:game_invitation_denied(Opponent, Invitation, self()),
     {reply, ok, S};
 
 handle_call({invite_to_game, Opponent}, _From, S) ->
-    Invitation = undefined, %% TODO: What is included in an invitation?
-    user_controller:game_invitation(Opponent, Invitation, self()),
+    Invitation = game_invitation:new(),
+    user_controller:game_invitation(Opponent, Invitation),
     {reply, ok, S};
 
 handle_call(_Request, _From, State) ->
@@ -160,9 +160,9 @@ handle_cast({message, Message}, S = #user{socket_controller = SC}) ->
     socket_controller:send_message(SC, Message),
     {noreply, S};
 
-handle_cast({game_invitation, Invitation, Opponent}, S) ->
+handle_cast({game_invitation, Invitation}, S) ->
     SC = S#user.socket_controller,
-    socket_controller:send_game_invitation(SC, Invitation, Opponent),
+    socket_controller:send_game_invitation(SC, Invitation),
     {noreply, S};
 
 handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->

@@ -4,7 +4,7 @@
 %% API
 -export([ start_link/1
         , send_message/2
-        , send_game_invitation/3
+        , send_game_invitation/2
         , send_game_invitation_accepted/3
         , send_game_invitation_denied/3
         ]).
@@ -33,8 +33,8 @@ start_link(Socket) ->
 send_message(SC, Message) ->
     gen_server:call(SC, {send, Message}).
 
-send_game_invitation(SC, Invitation, Opponent) ->
-    gen_server:call(SC, {send, {game_invitation, Invitation, Opponent}}).
+send_game_invitation(SC, Invitation) ->
+    gen_server:call(SC, {send, {game_invitation, Invitation}}).
 
 send_game_invitation_accepted(SC, Invitation, Opponent) ->
     gen_server:call(SC, {send, {accepted, Invitation, Opponent}}).
