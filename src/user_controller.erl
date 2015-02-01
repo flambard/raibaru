@@ -7,8 +7,10 @@
         , create_room/2
         , say/3
         , accept_game_invitation/2
+        , deny_game_invitation/2
         , message/2
         , game_invitation_accepted/3
+        , game_invitation_denied/3
         ]).
 
 %% gen_server callbacks
@@ -50,6 +52,9 @@ say(User, Room, Message) ->
 accept_game_invitation(User, Invitation) ->
     gen_server:call(User, {accept_game_invitation, Invitation}).
 
+deny_game_invitation(User, Invitation) ->
+    gen_server:call(User, {deny_game_invitation, Invitation}).
+
 
 %%%
 %%% Server API
@@ -60,6 +65,9 @@ message(User, Message) ->
 
 game_invitation_accepted(User, Invitation, Opponent) ->
     gen_server:cast(User, {game_invitation_accepted, Invitation, Opponent}).
+
+game_invitation_denied(User, Invitation, Opponent) ->
+    gen_server:cast(User, {game_invitation_denied, Invitation, Opponent}).
 
 
 %%%===================================================================
@@ -106,6 +114,11 @@ handle_call({accept_game_invitation, Invitation}, _From, S) ->
     game_sup:accept_invitation(Invitation),
     {reply, ok, S};
 
+handle_call({deny_game_invitation, Invitation}, _From, S) ->
+    Opponent = undefined, %% TODO: Is the opponent included in the invitation?
+    user_controller:send_game_invitation_denied(Opponent, Invitation),
+    {reply, ok, S};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -131,6 +144,11 @@ handle_cast({message, Message}, S = #user{socket_controller = SC}) ->
 handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->
     SC = S#user.socket_controller,
     socket_controller:send_game_invitation_accepted(SC, Invitation, Opponent),
+    {noreply, S};
+
+handle_cast({game_invitation_denied, Invitation, Opponent}, S) ->
+    SC = S#user.socket_controller,
+    socket_controller:send_game_invitation_denied(SC, Invitation, Opponent),
     {noreply, S};
 
 handle_cast(_Msg, State) ->
