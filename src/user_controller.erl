@@ -130,12 +130,12 @@ handle_call({accept_game_invitation, Invitation}, _From, S) ->
 
 handle_call({deny_game_invitation, Invitation}, _From, S) ->
     Opponent = undefined, %% TODO: Is the opponent included in the invitation?
-    user_controller:send_game_invitation_denied(Opponent, Invitation),
+    user_controller:game_invitation_denied(Opponent, Invitation, self()),
     {reply, ok, S};
 
 handle_call({invite_to_game, Opponent}, _From, S) ->
     Invitation = undefined, %% TODO: What is included in an invitation?
-    user_controller:invited_to_game(Opponent, Invitation),
+    user_controller:game_invitation(Opponent, Invitation, self()),
     {reply, ok, S};
 
 handle_call(_Request, _From, State) ->
