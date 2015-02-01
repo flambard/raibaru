@@ -32,6 +32,13 @@ init([]) ->
              worker,
              [lobby]},
 
+    MatchMaker = {matchmaker,
+                  {matchmaker, start_link, []},
+                  permanent,
+                  2000,
+                  worker,
+                  [matchmaker]},
+
     RoomSup = {room_sup,
                {room_sup, start_link, []},
                permanent,
@@ -62,6 +69,7 @@ init([]) ->
 
     {ok, {SupFlags,
           [ Lobby
+          , MatchMaker
           , RoomSup
           , GameSup
           , SocketControllerSup
