@@ -11,10 +11,12 @@
         , say/3
         , accept_game_invitation/2
         , deny_game_invitation/2
+        , invite_to_game/2
         ]).
 
 %% Server API
 -export([ message/2
+        , game_invitation/3
         , game_invitation_accepted/3
         , game_invitation_denied/3
         ]).
@@ -61,6 +63,9 @@ accept_game_invitation(User, Invitation) ->
 deny_game_invitation(User, Invitation) ->
     gen_server:call(User, {deny_game_invitation, Invitation}).
 
+invite_to_game(User, Opponent) ->
+    gen_server:call(User, {invitate_to_game, Opponent}).
+
 
 %%%
 %%% Server API
@@ -68,6 +73,9 @@ deny_game_invitation(User, Invitation) ->
 
 message(User, Message) ->
     gen_server:cast(User, {message, Message}).
+
+game_invitation(User, Invitation, Opponent) ->
+    gen_server:cast(User, {game_invitation, Invitation, Opponent}).
 
 game_invitation_accepted(User, Invitation, Opponent) ->
     gen_server:cast(User, {game_invitation_accepted, Invitation, Opponent}).
@@ -125,6 +133,11 @@ handle_call({deny_game_invitation, Invitation}, _From, S) ->
     user_controller:send_game_invitation_denied(Opponent, Invitation),
     {reply, ok, S};
 
+handle_call({invite_to_game, Opponent}, _From, S) ->
+    Invitation = undefined, %% TODO: What is included in an invitation?
+    user_controller:invited_to_game(Opponent, Invitation),
+    {reply, ok, S};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -145,6 +158,11 @@ handle_cast({say, Room, Message}, State) ->
 
 handle_cast({message, Message}, S = #user{socket_controller = SC}) ->
     socket_controller:send_message(SC, Message),
+    {noreply, S};
+
+handle_cast({game_invitation, Invitation, Opponent}, S) ->
+    SC = S#user.socket_controller,
+    socket_controller:send_game_invitation(SC, Invitation, Opponent),
     {noreply, S};
 
 handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->
