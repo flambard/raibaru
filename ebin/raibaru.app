@@ -4,8 +4,6 @@
   {modules, [ raibaru_app
             , raibaru_sup
             , lobby
-            , matchmaker
-            , matching_pool
             , room_sup
             , room
             , game
@@ -19,7 +17,6 @@
             ]},
   {registered, [ raibaru_sup
                , lobby
-               , matchmaker
                , room_sup
                , game_sup
                , socket_listener_sup
@@ -29,6 +26,7 @@
   {applications, [ kernel
                  , stdlib
                  , sasl
+                 , matchmaker
                  ]},
   {env, []}
  ]}.
