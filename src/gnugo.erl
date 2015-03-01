@@ -137,9 +137,6 @@ init([]) ->
     end.
 
 
-handle_call({gtp, quit}, _From, State = #state{port = Port}) ->
-    port_command(Port, gtp:command(quit)),
-    {stop, normal, State};
 handle_call({gtp, Command}, _From, State = #state{port = Port}) ->
     port_command(Port, gtp:command(Command)),
     CommandReply = receive_reply(Port),
@@ -154,16 +151,18 @@ handle_cast(_Msg, State) ->
     {noreply, State}.
 
 
+handle_info({Port, {exit_status, 0}}, State = #state{port = Port}) ->
+    {stop, normal, State#state{port = undefined}};
 handle_info({Port, {exit_status, Status}}, State = #state{port = Port}) ->
-    {stop, {port_exited, Status}, State};
+    {stop, {port_exited, Status}, State#state{port = undefined}};
 handle_info(_Info, State) ->
     {noreply, State}.
 
 
-terminate(normal, #state{port = Port}) ->
-    port_close(Port);
-terminate(_Reason, _State) ->
-    ok.
+terminate(_Reason, #state{port = undefined}) ->
+    ok;
+terminate(_Reason, #state{port = Port}) ->
+    port_close(Port).
 
 
 code_change(_OldVsn, State, _Extra) ->
