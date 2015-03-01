@@ -14,6 +14,9 @@
             , socket_listener
             , socket_controller_sup
             , socket_controller
+            , gnugo
+            , gtp
+            , vertex
             ]},
   {registered, [ raibaru_sup
                , lobby
