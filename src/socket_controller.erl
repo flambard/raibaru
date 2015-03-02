@@ -63,7 +63,7 @@ send_game_invitation_denied(SC, Invitation, Opponent) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Socket]) ->
-    {ok, Pid} = user_controller_sup:start_user_controller(self()),
+    {ok, Pid} = user_controller_sup:start_user_controller(?MODULE, self()),
     ok = inet:setopts(Socket, [{active, once}]),
     {ok, #socket_controller{ socket = Socket
                            , user_controller = Pid

@@ -3,7 +3,7 @@
 
 %% API
 -export([ start_link/0
-        , start_user_controller/1
+        , start_user_controller/2
         ]).
 
 %% Supervisor callbacks
@@ -18,8 +18,8 @@
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
-start_user_controller(Socket) ->
-    supervisor:start_child(?SERVER, [Socket]).
+start_user_controller(Module, Pid) ->
+    supervisor:start_child(?SERVER, [Module, Pid]).
 
 
 %%%===================================================================

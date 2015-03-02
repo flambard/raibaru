@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API
--export([ start_link/1
+-export([ start_link/2
         ]).
 
 %% Client API
@@ -31,7 +31,8 @@
         ]).
 
 -record(user,
-        { socket_controller
+        { channel
+        , module
         , joined_rooms = []
         }).
 
@@ -39,8 +40,8 @@
 %%% API
 %%%===================================================================
 
-start_link(SocketController) ->
-    gen_server:start_link(?MODULE, [SocketController], []).
+start_link(ChannelModule, Channel) ->
+    gen_server:start_link(?MODULE, [ChannelModule, Channel], []).
 
 
 %%%
@@ -98,9 +99,9 @@ game_invitation_denied(User, Invitation, Opponent) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([SocketController]) ->
-    link(SocketController),
-    {ok, #user{socket_controller = SocketController}}.
+init([Module, Channel]) ->
+    link(Channel),
+    {ok, #user{channel = Channel, module = Module}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -156,23 +157,22 @@ handle_cast({say, Room, Message}, State) ->
     ok = room:say(Room, Message),
     {noreply, State};
 
-handle_cast({message, Message}, S = #user{socket_controller = SC}) ->
-    socket_controller:send_message(SC, Message),
+handle_cast({message, Message}, S = #user{module = M}) ->
+    M:send_message(S#user.channel, Message),
     {noreply, S};
 
-handle_cast({game_invitation, Invitation}, S) ->
-    SC = S#user.socket_controller,
-    socket_controller:send_game_invitation(SC, Invitation),
+handle_cast({game_invitation, Invitation}, S = #user{module = M}) ->
+    M:send_game_invitation(S#user.channel, Invitation),
     {noreply, S};
 
 handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->
-    SC = S#user.socket_controller,
-    socket_controller:send_game_invitation_accepted(SC, Invitation, Opponent),
+    M = S#user.module,
+    M:send_game_invitation_accepted(S#user.channel, Invitation, Opponent),
     {noreply, S};
 
 handle_cast({game_invitation_denied, Invitation, Opponent}, S) ->
-    SC = S#user.socket_controller,
-    socket_controller:send_game_invitation_denied(SC, Invitation, Opponent),
+    M = S#user.module,
+    M:send_game_invitation_denied(S#user.channel, Invitation, Opponent),
     {noreply, S};
 
 handle_cast(_Msg, State) ->
