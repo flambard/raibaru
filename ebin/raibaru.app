@@ -9,10 +9,10 @@
             , game
             , game_invitation
             , game_sup
+            , user_controller_sup
             , user_controller
             , socket_listener_sup
             , socket_listener
-            , socket_controller_sup
             , socket_controller
             , gnugo
             , gtp

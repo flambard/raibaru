@@ -2,7 +2,8 @@
 -behaviour(gen_server).
 
 %% API
--export([ start_link/1
+-export([ start/1
+        , start_link/1
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
@@ -26,6 +27,9 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
+
+start(Socket) ->
+    gen_server:start(?MODULE, [Socket], []).
 
 start_link(Socket) ->
     gen_server:start_link(?MODULE, [Socket], []).
@@ -59,7 +63,7 @@ send_game_invitation_denied(SC, Invitation, Opponent) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Socket]) ->
-    {ok, Pid} = user_controller:start_link(),
+    {ok, Pid} = user_controller_sup:start_user_controller(self()),
     ok = inet:setopts(Socket, [{active, once}]),
     {ok, #socket_controller{ socket = Socket
                            , user_controller = Pid

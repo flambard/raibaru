@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API
--export([ start_link/0
+-export([ start_link/1
         ]).
 
 %% Client API
@@ -39,8 +39,7 @@
 %%% API
 %%%===================================================================
 
-start_link() ->
-    SocketController = self(),
+start_link(SocketController) ->
     gen_server:start_link(?MODULE, [SocketController], []).
 
 
@@ -100,6 +99,7 @@ game_invitation_denied(User, Invitation, Opponent) ->
 %% @end
 %%--------------------------------------------------------------------
 init([SocketController]) ->
+    link(SocketController),
     {ok, #user{socket_controller = SocketController}}.
 
 %%--------------------------------------------------------------------

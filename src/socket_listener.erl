@@ -75,7 +75,7 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast(accept, S = #listener{socket = ListenSocket}) ->
     {ok, Socket} = gen_tcp:accept(ListenSocket),
-    {ok, Pid} = socket_controller_sup:start_socket_controller(Socket),
+    {ok, Pid} = socket_controller:start(Socket),
     ok = gen_tcp:controlling_process(Socket, Pid),
     gen_server:cast(self(), accept),
     {noreply, S};
