@@ -31,7 +31,7 @@
         ]).
 
 -record(user,
-        { channel
+        { adapter
         , module
         , joined_rooms = []
         }).
@@ -40,8 +40,8 @@
 %%% API
 %%%===================================================================
 
-start_link(ChannelModule, Channel) ->
-    gen_server:start_link(?MODULE, [ChannelModule, Channel], []).
+start_link(AdapterModule, Adapter) ->
+    gen_server:start_link(?MODULE, [AdapterModule, Adapter], []).
 
 
 %%%
@@ -99,9 +99,9 @@ game_invitation_denied(User, Invitation, Opponent) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([Module, Channel]) ->
-    link(Channel),
-    {ok, #user{channel = Channel, module = Module}}.
+init([Module, Adapter]) ->
+    link(Adapter),
+    {ok, #user{adapter = Adapter, module = Module}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -158,21 +158,21 @@ handle_cast({say, Room, Message}, State) ->
     {noreply, State};
 
 handle_cast({message, Message}, S = #user{module = M}) ->
-    M:send_message(S#user.channel, Message),
+    M:send_message(S#user.adapter, Message),
     {noreply, S};
 
 handle_cast({game_invitation, Invitation}, S = #user{module = M}) ->
-    M:send_game_invitation(S#user.channel, Invitation),
+    M:send_game_invitation(S#user.adapter, Invitation),
     {noreply, S};
 
 handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->
     M = S#user.module,
-    M:send_game_invitation_accepted(S#user.channel, Invitation, Opponent),
+    M:send_game_invitation_accepted(S#user.adapter, Invitation, Opponent),
     {noreply, S};
 
 handle_cast({game_invitation_denied, Invitation, Opponent}, S) ->
     M = S#user.module,
-    M:send_game_invitation_denied(S#user.channel, Invitation, Opponent),
+    M:send_game_invitation_denied(S#user.adapter, Invitation, Opponent),
     {noreply, S};
 
 handle_cast(_Msg, State) ->
