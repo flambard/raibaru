@@ -21,8 +21,8 @@
         ]).
 
 -record(state,
-        { socket
-        , user_controller
+        { user_controller
+        , socket
         }).
 
 %%%===================================================================
@@ -69,8 +69,8 @@ send_move(SC, Game, Move) ->
 init([Socket]) ->
     {ok, Pid} = user_controller_sup:start_user_controller(?MODULE, self()),
     ok = inet:setopts(Socket, [{active, once}]),
-    {ok, #state{ socket = Socket
-               , user_controller = Pid
+    {ok, #state{ user_controller = Pid
+               , socket = Socket
                }}.
 
 %%--------------------------------------------------------------------
