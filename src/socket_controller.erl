@@ -8,6 +8,7 @@
         , send_game_invitation/2
         , send_game_invitation_accepted/3
         , send_game_invitation_denied/3
+        , send_move/3
         ]).
 
 %% gen_server callbacks
@@ -45,6 +46,9 @@ send_game_invitation_accepted(SC, Invitation, Opponent) ->
 
 send_game_invitation_denied(SC, Invitation, Opponent) ->
     gen_server:call(SC, {send, {denied, Invitation, Opponent}}).
+
+send_move(SC, Game, Move) ->
+    gen_server:call(SC, {send, {move, Game, Move}}).
 
 
 %%%===================================================================
