@@ -7,7 +7,7 @@
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
-        , send_game_invitation_denied/3
+        , send_game_invitation_denied/2
         , send_move/3
         ]).
 
@@ -43,11 +43,11 @@ send_message(_Server, _Message) ->
 send_game_invitation(Server, Invitation) ->
     gen_server:cast(Server, {game_invitation, Invitation}).
 
-send_game_invitation_accepted(_Server, _Invitation, _Opponent) ->
+send_game_invitation_accepted(_Server, _Invitation, _Game) ->
     %% Ignored, GNU Go does not send game invitations.
     ok.
 
-send_game_invitation_denied(_Server, _Invitation, _Opponent) ->
+send_game_invitation_denied(_Server, _Invitation) ->
     %% Ignored, GNU Go does not send game invitations.
     ok.
 

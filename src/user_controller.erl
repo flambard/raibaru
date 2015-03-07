@@ -19,7 +19,7 @@
 -export([ message/2
         , game_invitation/2
         , game_invitation_accepted/3
-        , game_invitation_denied/3
+        , game_invitation_denied/2
         ]).
 
 %% gen_server callbacks
@@ -81,11 +81,11 @@ message(User, Message) ->
 game_invitation(User, Invitation) ->
     gen_server:cast(User, {game_invitation, Invitation}).
 
-game_invitation_accepted(User, Invitation, Opponent) ->
-    gen_server:cast(User, {game_invitation_accepted, Invitation, Opponent}).
+game_invitation_accepted(User, Invitation, Game) ->
+    gen_server:cast(User, {game_invitation_accepted, Invitation, Game}).
 
-game_invitation_denied(User, Invitation, Opponent) ->
-    gen_server:cast(User, {game_invitation_denied, Invitation, Opponent}).
+game_invitation_denied(User, Invitation) ->
+    gen_server:cast(User, {game_invitation_denied, Invitation}).
 
 
 %%%===================================================================
@@ -132,12 +132,12 @@ handle_call({create_room, Name}, _From, S) ->
 handle_call({accept_game_invitation, Invitation}, _From, S) ->
     {ok, Game} = game_sup:accept_invitation(Invitation),
     Opponent = game_invitation:challenger(Invitation),
-    user_controller:game_invitation_accepted(Opponent, Invitation, self()),
+    user_controller:game_invitation_accepted(Opponent, Invitation, Game),
     {reply, {ok, Game}, S};
 
 handle_call({deny_game_invitation, Invitation}, _From, S) ->
     Opponent = game_invitation:challenger(Invitation),
-    user_controller:game_invitation_denied(Opponent, Invitation, self()),
+    user_controller:game_invitation_denied(Opponent, Invitation),
     {reply, ok, S};
 
 handle_call({invite_to_game, Opponent}, _From, S) ->
@@ -171,14 +171,14 @@ handle_cast({game_invitation, Invitation}, S = #user{module = M}) ->
     M:send_game_invitation(S#user.adapter, Invitation),
     {noreply, S};
 
-handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->
+handle_cast({game_invitation_accepted, Invitation, Game}, S) ->
     M = S#user.module,
-    M:send_game_invitation_accepted(S#user.adapter, Invitation, Opponent),
+    M:send_game_invitation_accepted(S#user.adapter, Invitation, Game),
     {noreply, S};
 
-handle_cast({game_invitation_denied, Invitation, Opponent}, S) ->
+handle_cast({game_invitation_denied, Invitation}, S) ->
     M = S#user.module,
-    M:send_game_invitation_denied(S#user.adapter, Invitation, Opponent),
+    M:send_game_invitation_denied(S#user.adapter, Invitation),
     {noreply, S};
 
 handle_cast(_Msg, State) ->

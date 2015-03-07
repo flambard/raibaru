@@ -8,7 +8,7 @@
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
-        , send_game_invitation_denied/3
+        , send_game_invitation_denied/2
         , send_move/3
         ]).
 
@@ -45,11 +45,11 @@ send_message(SC, Message) ->
 send_game_invitation(SC, Invitation) ->
     gen_server:call(SC, {send, {game_invitation, Invitation}}).
 
-send_game_invitation_accepted(SC, Invitation, Opponent) ->
-    gen_server:call(SC, {send, {accepted, Invitation, Opponent}}).
+send_game_invitation_accepted(SC, Invitation, Game) ->
+    gen_server:call(SC, {send, {accepted, Invitation, Game}}).
 
-send_game_invitation_denied(SC, Invitation, Opponent) ->
-    gen_server:call(SC, {send, {denied, Invitation, Opponent}}).
+send_game_invitation_denied(SC, Invitation) ->
+    gen_server:call(SC, {send, {denied, Invitation}}).
 
 send_move(SC, Game, Move) ->
     gen_server:call(SC, {send, {move, Game, Move}}).
