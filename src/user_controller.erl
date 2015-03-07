@@ -65,7 +65,7 @@ deny_game_invitation(User, Invitation) ->
     gen_server:call(User, {deny_game_invitation, Invitation}).
 
 invite_to_game(User, Opponent) ->
-    gen_server:call(User, {invitate_to_game, Opponent}).
+    gen_server:call(User, {invite_to_game, Opponent}).
 
 move(User, Game, Move) ->
     gen_server:call(User, {move, Game, Move}).
