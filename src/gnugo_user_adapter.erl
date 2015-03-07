@@ -41,7 +41,7 @@ send_message(_Server, _Message) ->
     ok.
 
 send_game_invitation(Server, Invitation) ->
-    gen_server:call(Server, {game_invitation, Invitation}).
+    gen_server:cast(Server, {game_invitation, Invitation}).
 
 send_game_invitation_accepted(_Server, _Invitation, _Opponent) ->
     %% Ignored, GNU Go does not send game invitations.
@@ -52,7 +52,7 @@ send_game_invitation_denied(_Server, _Invitation, _Opponent) ->
     ok.
 
 send_move(Server, Game, Move) ->
-    gen_server:call(Server, {move, Game, Move}).
+    gen_server:cast(Server, {move, Game, Move}).
 
 
 %%%===================================================================
@@ -76,6 +76,7 @@ init([]) ->
                , map = gnugo_game_map:new()
                }}.
 
+
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
@@ -92,18 +93,6 @@ init([]) ->
 %%--------------------------------------------------------------------
 handle_call(user_controller, _From, State = #state{user_controller = UC}) ->
     {reply, UC, State};
-handle_call({move, GameID, Move}, _From, State = #state{map = Map}) ->
-    {GameID, Ref, Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
-    ok = gnugo:play(Ref, other_color(Color), Move),
-    ok = gnugo:genmove_async(Ref, Color),
-    {reply, ok, State};
-handle_call({game_invitation, Invitation}, _From, State = #state{map = Map}) ->
-    UC = State#state.user_controller,
-    {ok, GameID} = user_controller:accept_game_invitation(UC, Invitation),
-    Color = game_invitation:opponent_color(Invitation),
-    {ok, Ref} = gnugo:new(),
-    NewMap = gnugo_game_map:add(GameID, Ref, Color, Map),
-    {reply, ok, State#state{map = NewMap}};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -119,8 +108,21 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_cast({game_invitation, Invitation}, State = #state{map = Map}) ->
+    UC = State#state.user_controller,
+    {ok, GameID} = user_controller:accept_game_invitation(UC, Invitation),
+    Color = game_invitation:opponent_color(Invitation),
+    {ok, Ref} = gnugo:new(),
+    NewMap = gnugo_game_map:add(GameID, Ref, Color, Map),
+    {noreply, State#state{map = NewMap}};
+handle_cast({move, GameID, Move}, State = #state{map = Map}) ->
+    {GameID, Ref, Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
+    ok = gnugo:play(Ref, other_color(Color), Move),
+    ok = gnugo:genmove_async(Ref, Color),
+    {noreply, State};
 handle_cast(_Msg, State) ->
     {noreply, State}.
+
 
 %%--------------------------------------------------------------------
 %% @private
