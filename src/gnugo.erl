@@ -1,9 +1,12 @@
 -module(gnugo).
--behaviour(gen_server).
 
-%% API
--export([ start_link/0
-        , protocol_version/1
+-export([ new/0
+        , receive_reply/1
+        , receive_reply/2
+        ]).
+
+%% GNU Go API
+-export([ protocol_version/1
         , name/1
         , version/1
         , known_command/2
@@ -17,6 +20,7 @@
         , set_free_handicap/2
         , play/3
         , genmove/2
+        , genmove_async/2
         , undo/1
         , time_settings/4
         , time_left/4
@@ -27,104 +31,14 @@
         , showboard/1
         ]).
 
-%% gen_server callbacks
--export([ init/1
-        , handle_call/3
-        , handle_cast/2
-        , handle_info/2
-        , terminate/2
-        , code_change/3
-        ]).
-
--record(state,
-        { port
-        }).
-
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
-start_link() ->
-    gen_server:start_link(?MODULE, [], []).
-
-protocol_version(Server) ->
-    gen_server:call(Server, {gtp, protocol_version}).
-
-name(Server) ->
-    gen_server:call(Server, {gtp, name}).
-
-version(Server) ->
-    gen_server:call(Server, {gtp, version}).
-
-known_command(Server, Command) ->
-    gen_server:call(Server, {gtp, {known_command, Command}}).
-
-list_commands(Server) ->
-    gen_server:call(Server, {gtp, list_commands}).
-
-quit(Server) ->
-    gen_server:call(Server, {gtp, quit}).
-
-boardsize(Server, Size) ->
-    gen_server:call(Server, {gtp, {boardsize, Size}}).
-
-clear_board(Server) ->
-    gen_server:call(Server, {gtp, clear_board}).
-
-komi(Server, NewKomi) ->
-    gen_server:call(Server, {gtp, {komi, NewKomi}}).
-
-fixed_handicap(Server, NumberOfStones) ->
-    gen_server:call(Server, {gtp, {fixed_handicap, NumberOfStones}}).
-
-place_free_handicap(Server, NumberOfStones) ->
-    gen_server:call(Server, {gtp, {place_free_handicap, NumberOfStones}}).
-
-set_free_handicap(Server, Vertices) ->
-    gen_server:call(Server, {gtp, {set_free_handicap, Vertices}}).
-
-play(Server, Color, Move) ->
-    gen_server:call(Server, {gtp, {play, Color, Move}}).
-
-genmove(Server, Color) ->
-    gen_server:call(Server, {gtp, {genmove, Color}}, infinity).
-
-undo(Server) ->
-    gen_server:call(Server, {gtp, undo}).
-
-time_settings(Server, MainTime, ByoYomiTime, ByoYomiStones) ->
-    gen_server:call(Server, {gtp, {time_settings,
-                                    MainTime,
-                                    ByoYomiTime,
-                                    ByoYomiStones}}).
-
-time_left(Server, Color, Time, Stones) ->
-    gen_server:call(Server, {gtp, {time_left, Color, Time, Stones}}).
-
-final_score(Server) ->
-    gen_server:call(Server, {gtp, final_score}, infinity).
-
-final_status_list(Server, Status) ->
-    gen_server:call(Server, {gtp, {final_status_list, Status}}, infinity).
-
-loadsgf(Server, FileName, MoveNumber) ->
-    gen_server:call(Server, {gtp, {loadsgf, FileName, MoveNumber}}).
-
-reg_genmove(Server, Color) ->
-    gen_server:call(Server, {gtp, {reg_genmove, Color}}, infinity).
-
-showboard(Server) ->
-    gen_server:call(Server, {gtp, showboard}).
-
-
-%%%===================================================================
-%%% gen_server callbacks
-%%%===================================================================
-
-init([]) ->
+new() ->
     case os:find_executable("gnugo") of
-        false    -> {stop, could_not_find_gnugo_executable};
+        false    -> {error, could_not_find_gnugo_executable};
         FilePath ->
             Args = ["--mode", "gtp"],
             Port = open_port({spawn_executable, FilePath},
@@ -133,50 +47,111 @@ init([]) ->
                              , exit_status
                              , hide
                              ]),
-            {ok, #state{port = Port}}
+            {ok, Port}
     end.
 
+receive_reply(Port) ->
+    receive_reply(Port, []).
 
-handle_call({gtp, Command}, _From, State = #state{port = Port}) ->
-    port_command(Port, gtp:command(Command)),
-    CommandReply = receive_reply(Port),
-    Reply = gtp:parse_command_reply(Command, CommandReply),
-    {reply, Reply, State};
-handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
+receive_reply(Port, Acc) ->
+    CommandReply = receive_command_reply(Port, Acc),
+    gtp:parse_command_reply({gtp, {genmove, undefined}}, CommandReply).
 
 
-handle_cast(_Msg, State) ->
-    {noreply, State}.
+%%%
+%%% GNU Go API
+%%%
 
+protocol_version(Port) ->
+    sync_command(Port, protocol_version).
 
-handle_info({Port, {exit_status, 0}}, State = #state{port = Port}) ->
-    {stop, normal, State#state{port = undefined}};
-handle_info({Port, {exit_status, Status}}, State = #state{port = Port}) ->
-    {stop, {port_exited, Status}, State#state{port = undefined}};
-handle_info(_Info, State) ->
-    {noreply, State}.
+name(Port) ->
+    sync_command(Port, name).
 
+version(Port) ->
+    sync_command(Port, version).
 
-terminate(_Reason, #state{port = undefined}) ->
-    ok;
-terminate(_Reason, #state{port = Port}) ->
-    port_close(Port).
+known_command(Port, Command) ->
+    sync_command(Port, {known_command, Command}).
 
+list_commands(Port) ->
+    sync_command(Port, list_commands).
 
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+quit(Port) ->
+    sync_command(Port, quit).
+
+boardsize(Port, Size) ->
+    sync_command(Port, {boardsize, Size}).
+
+clear_board(Port) ->
+    sync_command(Port, clear_board).
+
+komi(Port, NewKomi) ->
+    sync_command(Port, {komi, NewKomi}).
+
+fixed_handicap(Port, NumberOfStones) ->
+    sync_command(Port, {fixed_handicap, NumberOfStones}).
+
+place_free_handicap(Port, NumberOfStones) ->
+    sync_command(Port, {place_free_handicap, NumberOfStones}).
+
+set_free_handicap(Port, Vertices) ->
+    sync_command(Port, {set_free_handicap, Vertices}).
+
+play(Port, Color, Move) ->
+    sync_command(Port, {play, Color, Move}).
+
+genmove(Port, Color) ->
+    sync_command(Port, {genmove, Color}).
+
+genmove_async(Port, Color) ->
+    async_command(Port, {genmove, Color}).
+
+undo(Port) ->
+    sync_command(Port, undo).
+
+time_settings(Port, MainTime, ByoYomiTime, ByoYomiStones) ->
+    sync_command(Port, {time_settings,
+                        MainTime,
+                        ByoYomiTime,
+                        ByoYomiStones}).
+
+time_left(Port, Color, Time, Stones) ->
+    sync_command(Port, {time_left, Color, Time, Stones}).
+
+final_score(Port) ->
+    sync_command(Port, final_score).
+
+final_status_list(Port, Status) ->
+    sync_command(Port, {final_status_list, Status}).
+
+loadsgf(Port, FileName, MoveNumber) ->
+    sync_command(Port, {loadsgf, FileName, MoveNumber}).
+
+reg_genmove(Port, Color) ->
+    sync_command(Port, {reg_genmove, Color}).
+
+showboard(Port) ->
+    sync_command(Port, showboard).
 
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 
-receive_reply(Port) ->
-    receive_reply(Port, []).
+async_command(Port, Command) ->
+    port_command(Port, gtp:command(Command)),
+    ok.
 
-receive_reply(Port, Acc) ->
+sync_command(Port, Command) ->
+    port_command(Port, gtp:command(Command)),
+    CommandReply = receive_command_reply(Port),
+    gtp:parse_command_reply(Command, CommandReply).
+
+receive_command_reply(Port) ->
+    receive_command_reply(Port, []).
+
+receive_command_reply(Port, Acc) ->
     receive
         {Port, {data, {eol, []}}}   -> string:join(lists:reverse(Acc), "\n");
         {Port, {data, {eol, Line}}} -> receive_reply(Port, [Line | Acc])

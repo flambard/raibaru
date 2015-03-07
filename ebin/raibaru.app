@@ -15,6 +15,8 @@
             , socket_listener
             , socket_user_adapter
             , gnugo
+            , gnugo_user_adapter
+            , gnugo_game_map
             , gtp
             , vertex
             ]},

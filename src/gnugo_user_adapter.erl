@@ -1,25 +1,13 @@
--module(user_controller).
+-module(gnugo_user_adapter).
 -behaviour(gen_server).
 
 %% API
--export([ start_link/2
-        ]).
-
-%% Client API
--export([ get_room_list/1
-        , create_room/2
-        , say/3
-        , accept_game_invitation/2
-        , deny_game_invitation/2
-        , invite_to_game/2
-        , move/3
-        ]).
-
-%% Server API
--export([ message/2
-        , game_invitation/2
-        , game_invitation_accepted/3
-        , game_invitation_denied/3
+-export([ start_link/0
+        , send_message/2
+        , send_game_invitation/2
+        , send_game_invitation_accepted/3
+        , send_game_invitation_denied/3
+        , send_move/3
         ]).
 
 %% gen_server callbacks
@@ -31,61 +19,36 @@
         , code_change/3
         ]).
 
--record(user,
-        { adapter
-        , module
-        , joined_rooms = []
+-record(state,
+        { user_controller
+        , map
         }).
+
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
-start_link(AdapterModule, Adapter) ->
-    gen_server:start_link(?MODULE, [AdapterModule, Adapter], []).
+start_link() ->
+    gen_server:start_link(?MODULE, [], []).
 
+send_message(_Server, _Message) ->
+    %% Messages are ignored.
+    ok.
 
-%%%
-%%% Client API
-%%%
+send_game_invitation(Server, Invitation) ->
+    gen_server:call(Server, {game_invitation, Invitation}).
 
-get_room_list(User) ->
-    gen_server:call(User, room_list).
+send_game_invitation_accepted(_Server, _Invitation, _Opponent) ->
+    %% Ignored, GNU Go does not send game invitations.
+    ok.
 
-create_room(User, Name) ->
-    gen_server:call(User, {create_room, Name}).
+send_game_invitation_denied(_Server, _Invitation, _Opponent) ->
+    %% Ignored, GNU Go does not send game invitations.
+    ok.
 
-say(User, Room, Message) ->
-    gen_server:cast(User, {say, Room, Message}).
-
-accept_game_invitation(User, Invitation) ->
-    gen_server:call(User, {accept_game_invitation, Invitation}).
-
-deny_game_invitation(User, Invitation) ->
-    gen_server:call(User, {deny_game_invitation, Invitation}).
-
-invite_to_game(User, Opponent) ->
-    gen_server:call(User, {invitate_to_game, Opponent}).
-
-move(User, Game, Move) ->
-    gen_server:call(User, {move, Game, Move}).
-
-
-%%%
-%%% Server API
-%%%
-
-message(User, Message) ->
-    gen_server:cast(User, {message, Message}).
-
-game_invitation(User, Invitation) ->
-    gen_server:cast(User, {game_invitation, Invitation}).
-
-game_invitation_accepted(User, Invitation, Opponent) ->
-    gen_server:cast(User, {game_invitation_accepted, Invitation, Opponent}).
-
-game_invitation_denied(User, Invitation, Opponent) ->
-    gen_server:cast(User, {game_invitation_denied, Invitation, Opponent}).
+send_move(Server, Game, Move) ->
+    gen_server:call(Server, {move, Game, Move}).
 
 
 %%%===================================================================
@@ -103,9 +66,11 @@ game_invitation_denied(User, Invitation, Opponent) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([Module, Adapter]) ->
-    link(Adapter),
-    {ok, #user{adapter = Adapter, module = Module}}.
+init([]) ->
+    {ok, Pid} = user_controller_sup:start_user_controller(?MODULE, self()),
+    {ok, #state{ user_controller = Pid
+               , map = gnugo_game_map:new()
+               }}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -121,31 +86,22 @@ init([Module, Adapter]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call(room_list, _From, S = #user{joined_rooms = Rooms}) ->
-    Reply = {ok, Rooms},
-    {reply, Reply, S};
-
-handle_call({create_room, Name}, _From, S) ->
-    room_sup:start_room(Name),
-    {reply, ok, S};
-
-handle_call({accept_game_invitation, Invitation}, _From, S) ->
-    {ok, Game} = game_sup:accept_invitation(Invitation),
-    {reply, {ok, Game}, S};
-
-handle_call({deny_game_invitation, Invitation}, _From, S) ->
-    Opponent = game_invitation:challenger(Invitation),
-    user_controller:game_invitation_denied(Opponent, Invitation, self()),
-    {reply, ok, S};
-
-handle_call({invite_to_game, Opponent}, _From, S) ->
-    Invitation = game_invitation:new(),
-    user_controller:game_invitation(Opponent, Invitation),
-    {reply, ok, S};
-
+handle_call({move, GameID, Move}, _From, State = #state{map = Map}) ->
+    {GameID, Ref, Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
+    ok = gnugo:play(Ref, other_color(Color), Move),
+    ok = gnugo:genmove_async(Ref, Color),
+    {reply, ok, State};
+handle_call({game_invitation, Invitation}, _From, State = #state{map = Map}) ->
+    UC = State#state.user_controller,
+    {ok, GameID} = user_controller:accept_game_invitation(UC, Invitation),
+    Color = game_invitation:opponent_color(Invitation),
+    {ok, Ref} = gnugo:new(),
+    NewMap = gnugo_game_map:add(GameID, Ref, Color, Map),
+    {reply, ok, State#state{map = NewMap}};
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
+
 
 %%--------------------------------------------------------------------
 %% @private
@@ -157,28 +113,6 @@ handle_call(_Request, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_cast({say, Room, Message}, State) ->
-    ok = room:say(Room, Message),
-    {noreply, State};
-
-handle_cast({message, Message}, S = #user{module = M}) ->
-    M:send_message(S#user.adapter, Message),
-    {noreply, S};
-
-handle_cast({game_invitation, Invitation}, S = #user{module = M}) ->
-    M:send_game_invitation(S#user.adapter, Invitation),
-    {noreply, S};
-
-handle_cast({game_invitation_accepted, Invitation, Opponent}, S) ->
-    M = S#user.module,
-    M:send_game_invitation_accepted(S#user.adapter, Invitation, Opponent),
-    {noreply, S};
-
-handle_cast({game_invitation_denied, Invitation, Opponent}, S) ->
-    M = S#user.module,
-    M:send_game_invitation_denied(S#user.adapter, Invitation, Opponent),
-    {noreply, S};
-
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -192,6 +126,16 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({Ref, {data, {eol, Line}}}, State = #state{map = Map}) ->
+    %% Received asynchronous reply from GNU Go.
+    UC = State#state.user_controller,
+    {ok, Move} = gnugo:receive_reply(Ref, Line),
+    {GameID, Ref, _Color} = gnugo_game_map:find_game_id(Ref, Map),
+    ok = user_controller:move(UC, GameID, Move),
+    {noreply, State};
+handle_info({Ref, {exit_status, _Status}}, State = #state{map = Map}) ->
+    NewMap = gnugo_game_map:delete_gnugo_ref(Ref, Map),
+    {noreply, State#state{map = NewMap}};
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -220,6 +164,10 @@ terminate(_Reason, _State) ->
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
 
+
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+other_color(black) -> white;
+other_color(white) -> black.
