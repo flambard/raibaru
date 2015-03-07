@@ -93,6 +93,7 @@ init([]) ->
 %%--------------------------------------------------------------------
 handle_call(user_controller, _From, State = #state{user_controller = UC}) ->
     {reply, UC, State};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -115,11 +116,13 @@ handle_cast({game_invitation, Invitation}, State = #state{map = Map}) ->
     {ok, Ref} = gnugo:new(),
     NewMap = gnugo_game_map:add(GameID, Ref, Color, Map),
     {noreply, State#state{map = NewMap}};
+
 handle_cast({move, GameID, Move}, State = #state{map = Map}) ->
     {GameID, Ref, Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
     ok = gnugo:play(Ref, other_color(Color), Move),
     ok = gnugo:genmove_async(Ref, Color),
     {noreply, State};
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -141,9 +144,11 @@ handle_info({Ref, {data, {eol, Line}}}, State = #state{map = Map}) ->
     {GameID, Ref, _Color} = gnugo_game_map:find_game_id(Ref, Map),
     ok = user_controller:move(UC, GameID, Move),
     {noreply, State};
+
 handle_info({Ref, {exit_status, _Status}}, State = #state{map = Map}) ->
     NewMap = gnugo_game_map:delete_gnugo_ref(Ref, Map),
     {noreply, State#state{map = NewMap}};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 
