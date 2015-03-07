@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API
--export([ start_link/1
+-export([ start_link/2
         ]).
 
 %% gen_server callbacks
@@ -22,8 +22,8 @@
 %%% API
 %%%===================================================================
 
-start_link(Players) ->
-    gen_server:start_link(?MODULE, Players, []).
+start_link(Player1, Player2) ->
+    gen_server:start_link(?MODULE, [Player1, Player2], []).
 
 
 %%%===================================================================
