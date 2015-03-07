@@ -20,7 +20,7 @@
         , code_change/3
         ]).
 
--record(socket_controller,
+-record(state,
         { socket
         , user_controller
         }).
@@ -69,9 +69,9 @@ send_move(SC, Game, Move) ->
 init([Socket]) ->
     {ok, Pid} = user_controller_sup:start_user_controller(?MODULE, self()),
     ok = inet:setopts(Socket, [{active, once}]),
-    {ok, #socket_controller{ socket = Socket
-                           , user_controller = Pid
-                           }}.
+    {ok, #state{ socket = Socket
+               , user_controller = Pid
+               }}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -87,7 +87,7 @@ init([Socket]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({send, Message}, _From, S = #socket_controller{socket = Socket}) ->
+handle_call({send, Message}, _From, S = #state{socket = Socket}) ->
     ok = gen_tcp:send(Socket, Message),
     {reply, ok, S};
 
