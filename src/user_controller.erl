@@ -131,6 +131,8 @@ handle_call({create_room, Name}, _From, S) ->
 
 handle_call({accept_game_invitation, Invitation}, _From, S) ->
     {ok, Game} = game_sup:accept_invitation(Invitation),
+    Opponent = game_invitation:challenger(Invitation),
+    user_controller:game_invitation_accepted(Opponent, Invitation, self()),
     {reply, {ok, Game}, S};
 
 handle_call({deny_game_invitation, Invitation}, _From, S) ->
