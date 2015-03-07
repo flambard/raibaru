@@ -3,6 +3,7 @@
 
 %% API
 -export([ start_link/0
+        , user_controller/1
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
@@ -31,6 +32,9 @@
 
 start_link() ->
     gen_server:start_link(?MODULE, [], []).
+
+user_controller(Server) ->
+    gen_server:call(Server, user_controller).
 
 send_message(_Server, _Message) ->
     %% Messages are ignored.
@@ -86,6 +90,8 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(user_controller, _From, State = #state{user_controller = UC}) ->
+    {reply, UC, State};
 handle_call({move, GameID, Move}, _From, State = #state{map = Map}) ->
     {GameID, Ref, Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
     ok = gnugo:play(Ref, other_color(Color), Move),

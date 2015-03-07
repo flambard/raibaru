@@ -4,6 +4,7 @@
 %% API
 -export([ start/1
         , start_link/1
+        , user_controller/1
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
@@ -34,6 +35,9 @@ start(Socket) ->
 
 start_link(Socket) ->
     gen_server:start_link(?MODULE, [Socket], []).
+
+user_controller(SC) ->
+    gen_server:call(SC, user_controller).
 
 send_message(SC, Message) ->
     gen_server:call(SC, {send, Message}).
@@ -87,6 +91,9 @@ init([Socket]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(user_controller, _From, S = #state{user_controller = UC}) ->
+    {reply, UC, S};
+
 handle_call({send, Message}, _From, S = #state{socket = Socket}) ->
     ok = gen_tcp:send(Socket, Message),
     {reply, ok, S};
