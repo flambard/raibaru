@@ -23,7 +23,7 @@
                , room_sup
                , game_sup
                , socket_listener_sup
-               , socket_controller_sup
+               , user_controller_sup
                ]},
   {mod, {raibaru_app, []}},
   {applications, [ kernel
