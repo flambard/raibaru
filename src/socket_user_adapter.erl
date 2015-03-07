@@ -1,4 +1,4 @@
--module(socket_controller).
+-module(socket_user_adapter).
 -behaviour(gen_server).
 
 %% API

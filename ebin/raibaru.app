@@ -13,7 +13,7 @@
             , user_controller
             , socket_listener_sup
             , socket_listener
-            , socket_controller
+            , socket_user_adapter
             , gnugo
             , gtp
             , vertex
