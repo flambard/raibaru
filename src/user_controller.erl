@@ -145,6 +145,11 @@ handle_call({invite_to_game, Opponent}, _From, S) ->
     user_controller:game_invitation(Opponent, Invitation),
     {reply, ok, S};
 
+handle_call({move, Game, Move}, _From, S) ->
+    Opponent = undefined, %% TODO: Get opponent from game
+    user_controller:make_move(Opponent, Game, Move),
+    {reply, ok, S};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
