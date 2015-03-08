@@ -4,6 +4,8 @@
 %% API
 -export([ start_link/0
         , user_controller/1
+        , game_map/1
+        , show_board/2
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
@@ -35,6 +37,13 @@ start_link() ->
 
 user_controller(Server) ->
     gen_server:call(Server, user_controller).
+
+game_map(Server) ->
+    gen_server:call(Server, game_map).
+
+show_board(Server, Game) ->
+    gen_server:cast(Server, {show_board, Game}).
+
 
 send_message(_Server, _Message) ->
     %% Messages are ignored.
@@ -94,6 +103,9 @@ init([]) ->
 handle_call(user_controller, _From, State = #state{user_controller = UC}) ->
     {reply, UC, State};
 
+handle_call(game_map, _From, State = #state{map = Map}) ->
+    {reply, Map, State};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.
@@ -123,6 +135,11 @@ handle_cast({move, GameID, Move}, State = #state{map = Map}) ->
     ok = gnugo:genmove_async(Ref, Color),
     {noreply, State};
 
+handle_cast({show_board, GameID}, State = #state{map = Map}) ->
+    {GameID, Ref, _Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
+    ok = gnugo:showboard(Ref),
+    {noreply, State};
+
 handle_cast(_Msg, State) ->
     {noreply, State}.
 
@@ -140,7 +157,7 @@ handle_cast(_Msg, State) ->
 handle_info({Ref, {data, {eol, Line}}}, State = #state{map = Map}) ->
     %% Received asynchronous reply from GNU Go.
     UC = State#state.user_controller,
-    {ok, Move} = gnugo:receive_reply(Ref, Line),
+    {ok, Move} = gnugo:receive_reply(Ref, [Line]),
     {GameID, Ref, _Color} = gnugo_game_map:find_game_id(Ref, Map),
     ok = user_controller:move(UC, GameID, Move),
     {noreply, State};
