@@ -3,6 +3,7 @@
 
 %% API
 -export([ start_link/2
+        , move/2
         ]).
 
 %% gen_server callbacks
@@ -15,7 +16,9 @@
         ]).
 
 -record(game,
-        {}).
+        { black
+        , white
+        }).
 
 
 %%%===================================================================
@@ -24,6 +27,9 @@
 
 start_link(Player1, Player2) ->
     gen_server:start_link(?MODULE, [Player1, Player2], []).
+
+move(Game, Move) ->
+    gen_server:call(Game, {move, Move}).
 
 
 %%%===================================================================
@@ -41,8 +47,11 @@ start_link(Player1, Player2) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init(_Players) ->
-    {ok, #game{}}.
+init([Player1, Player2]) ->
+    {ok, #game{ black = Player1
+              , white = Player2
+              }}.
+
 
 %%--------------------------------------------------------------------
 %% @private
@@ -58,6 +67,17 @@ init(_Players) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call({move, Move}, {Pid, _Tag}, State) ->
+    %% TODO: Check if move is legal
+    %% TODO: Record the move
+    Opponent = case State of
+                   #game{black = Pid} -> State#game.white;
+                   #game{white = Pid} -> State#game.black
+               end,
+    ok = user_controller:send_move(Opponent, self(), Move),
+    Reply = ok,
+    {reply, Reply, State};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.

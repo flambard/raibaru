@@ -20,6 +20,7 @@
         , send_game_invitation/2
         , send_game_invitation_accepted/3
         , send_game_invitation_denied/2
+        , send_move/3
         ]).
 
 %% gen_server callbacks
@@ -87,6 +88,9 @@ send_game_invitation_accepted(User, Invitation, Game) ->
 send_game_invitation_denied(User, Invitation) ->
     gen_server:cast(User, {send_game_invitation_denied, Invitation}).
 
+send_move(User, Game, Move) ->
+    gen_server:cast(User, {send_move, Game, Move}).
+
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -146,9 +150,8 @@ handle_call({recv_game_invitation, Opponent}, _From, S) ->
     {reply, ok, S};
 
 handle_call({recv_move, Game, Move}, _From, S) ->
-    Opponent = undefined, %% TODO: Get opponent from game
-    user_controller:send_move(Opponent, Game, Move),
-    {reply, ok, S};
+    Reply = game:move(Game, Move),
+    {reply, Reply, S};
 
 handle_call(_Request, _From, State) ->
     Reply = ok,
@@ -184,6 +187,11 @@ handle_cast({send_game_invitation_accepted, Invitation, Game}, S) ->
 handle_cast({send_game_invitation_denied, Invitation}, S) ->
     M = S#user.module,
     M:send_game_invitation_denied(S#user.adapter, Invitation),
+    {noreply, S};
+
+handle_cast({send_move, Game, Move}, S) ->
+    M = S#user.module,
+    ok = M:send_move(S#user.adapter, Game, Move),
     {noreply, S};
 
 handle_cast(_Msg, State) ->
