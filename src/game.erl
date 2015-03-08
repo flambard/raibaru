@@ -48,6 +48,8 @@ move(Game, Move) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Player1, Player2]) ->
+    monitor(process, Player1),
+    monitor(process, Player2),
     {ok, #game{ black = Player1
               , white = Player2
               }}.
@@ -105,6 +107,10 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({'DOWN', _MonitorRef, _Type, _Pid, _Info}, State) ->
+    %% TODO: A user controller process died, mark player as away
+    {noreply, State};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 

@@ -135,6 +135,7 @@ handle_call({create_room, Name}, _From, S) ->
 
 handle_call({recv_game_invitation_accept, Invitation}, _From, S) ->
     {ok, Game} = game_sup:accept_invitation(Invitation),
+    monitor(process, Game),
     Opponent = game_invitation:challenger(Invitation),
     user_controller:send_game_invitation_accepted(Opponent, Invitation, Game),
     {reply, {ok, Game}, S};
@@ -180,6 +181,7 @@ handle_cast({send_game_invitation, Invitation}, S = #user{module = M}) ->
     {noreply, S};
 
 handle_cast({send_game_invitation_accepted, Invitation, Game}, S) ->
+    monitor(process, Game),
     M = S#user.module,
     M:send_game_invitation_accepted(S#user.adapter, Invitation, Game),
     {noreply, S};
@@ -207,6 +209,10 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({'DOWN', _MonitorRef, _Type, _Pid, _Info}, State) ->
+    %% TODO: A game process died, clean up
+    {noreply, State};
+
 handle_info(_Info, State) ->
     {noreply, State}.
 
