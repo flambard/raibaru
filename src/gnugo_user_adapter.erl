@@ -1,11 +1,15 @@
 -module(gnugo_user_adapter).
 -behaviour(gen_server).
+-behaviour(user_adapter).
 
 %% API
 -export([ start/0
-        , user_controller/1
         , game_map/1
         , show_board/2
+        ]).
+
+%% User Adapter API
+-export([ user_controller/1
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3

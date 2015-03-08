@@ -1,13 +1,14 @@
 -module(shell_user_adapter).
+-behaviour(user_adapter).
 
 %% API
 -export([ start/0
-        , user_controller/1
         , receive_message/1
         ]).
 
 %% User Adapter API
--export([ send_message/2
+-export([ user_controller/1
+        , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
         , send_game_invitation_denied/2

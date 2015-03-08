@@ -1,10 +1,14 @@
 -module(socket_user_adapter).
 -behaviour(gen_server).
+-behaviour(user_adapter).
 
 %% API
 -export([ start/1
         , start_link/1
-        , user_controller/1
+        ]).
+
+%% User Adapter API
+-export([ user_controller/1
         , send_message/2
         , send_game_invitation/2
         , send_game_invitation_accepted/3
@@ -35,6 +39,11 @@ start(Socket) ->
 
 start_link(Socket) ->
     gen_server:start_link(?MODULE, [Socket], []).
+
+
+%%%
+%%% User Adapter API
+%%%
 
 user_controller(SC) ->
     gen_server:call(SC, user_controller).
