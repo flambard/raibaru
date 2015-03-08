@@ -55,7 +55,7 @@ receive_reply(Port) ->
 
 receive_reply(Port, Acc) ->
     CommandReply = receive_command_reply(Port, Acc),
-    gtp:parse_command_reply({gtp, {genmove, undefined}}, CommandReply).
+    gtp:parse_command_reply({genmove, undefined}, CommandReply).
 
 
 %%%
@@ -154,5 +154,5 @@ receive_command_reply(Port) ->
 receive_command_reply(Port, Acc) ->
     receive
         {Port, {data, {eol, []}}}   -> string:join(lists:reverse(Acc), "\n");
-        {Port, {data, {eol, Line}}} -> receive_reply(Port, [Line | Acc])
+        {Port, {data, {eol, Line}}} -> receive_command_reply(Port, [Line | Acc])
     end.
