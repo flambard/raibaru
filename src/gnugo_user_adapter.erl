@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API
--export([ start_link/0
+-export([ start/0
         , user_controller/1
         , game_map/1
         , show_board/2
@@ -32,8 +32,8 @@
 %%% API
 %%%===================================================================
 
-start_link() ->
-    gen_server:start_link(?MODULE, [], []).
+start() ->
+    gen_server:start(?MODULE, [], []).
 
 user_controller(Server) ->
     gen_server:call(Server, user_controller).
