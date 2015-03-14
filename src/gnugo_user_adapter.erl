@@ -137,6 +137,10 @@ handle_cast({game_invitation, Invitation}, State) ->
 handle_cast({game_started, Game, Color, _Why}, S) ->
     {ok, Ref} = gnugo:new(),
     NewMap = gnugo_game_map:add(Game, Ref, Color, S#state.map),
+    case Color of
+        white -> ok;
+        black -> ok = gnugo:genmove_async(Ref, Color)
+    end,
     {noreply, S#state{map = NewMap}};
 
 handle_cast({move, GameID, Move}, State = #state{map = Map}) ->
