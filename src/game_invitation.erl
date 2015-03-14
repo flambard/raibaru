@@ -37,5 +37,6 @@ opponent_color(#invitation{opponent_color = C}) -> C.
 %%% Internal functions
 %%%===================================================================
 
-other_color(black) -> white;
-other_color(white) -> black.
+other_color(nigiri) -> nigiri;
+other_color(black)  -> white;
+other_color(white)  -> black.

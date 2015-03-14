@@ -161,7 +161,12 @@ handle_cast({recv_say, Room, Message}, State) ->
     {noreply, State};
 
 handle_cast({recv_game_invitation_accept, Invitation}, S) ->
-    case game_invitation:challenger_color(Invitation) of
+    ChallengerColor =
+        case game_invitation:challenger_color(Invitation) of
+            nigiri -> random_color();
+            Color  -> Color
+        end,
+    case ChallengerColor of
         black ->
             game_sup:start_game(game_invitation:challenger(Invitation),
                                 self(),
@@ -249,3 +254,9 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+random_color() ->
+    case random:uniform(2) of
+        1 -> black;
+        2 -> white
+    end.
