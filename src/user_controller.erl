@@ -134,9 +134,9 @@ handle_call({create_room, Name}, _From, S) ->
     {reply, {ok, Room}, S};
 
 handle_call({recv_game_invitation_accept, Invitation}, _From, S) ->
-    {ok, Game} = game_sup:accept_invitation(Invitation),
-    monitor(process, Game),
     Opponent = game_invitation:challenger(Invitation),
+    {ok, Game} = game_sup:start_game(Opponent, self()),
+    monitor(process, Game),
     user_controller:send_game_invitation_accepted(Opponent, Invitation, Game),
     {reply, {ok, Game}, S};
 
