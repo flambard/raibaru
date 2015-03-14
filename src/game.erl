@@ -1,50 +1,54 @@
 -module(game).
--behaviour(gen_server).
+-behaviour(gen_fsm).
 
 %% API
 -export([ start_link/3
         , move/2
         ]).
 
-%% gen_server callbacks
+%% gen_fsm callbacks
 -export([ init/1
-        , handle_call/3
-        , handle_cast/2
-        , handle_info/2
-        , terminate/2
-        , code_change/3
+        , state_name/2
+        , awaiting_move/3
+        , handle_event/3
+        , handle_sync_event/4
+        , handle_info/3
+        , terminate/3
+        , code_change/4
         ]).
 
--record(game,
+-record(state,
         { black
         , white
+        , opponent_passed = false
         }).
-
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
 start_link(Player1, Player2, Why) ->
-    gen_server:start_link(?MODULE, [Player1, Player2, Why], []).
+    gen_fsm:start_link(?MODULE, [Player1, Player2, Why], []).
 
 move(Game, Move) ->
-    gen_server:call(Game, {move, Move}).
+    gen_fsm:sync_send_event(Game, {move, Move}).
 
 
 %%%===================================================================
-%%% gen_server callbacks
+%%% gen_fsm callbacks
 %%%===================================================================
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% Initializes the server
+%% Whenever a gen_fsm is started using gen_fsm:start/[3,4] or
+%% gen_fsm:start_link/[3,4], this function is called by the new
+%% process to initialize.
 %%
-%% @spec init(Args) -> {ok, State} |
-%%                     {ok, State, Timeout} |
+%% @spec init(Args) -> {ok, StateName, State} |
+%%                     {ok, StateName, State, Timeout} |
 %%                     ignore |
-%%                     {stop, Reason}
+%%                     {stop, StopReason}
 %% @end
 %%--------------------------------------------------------------------
 init([Player1, Player2, Why]) ->
@@ -52,82 +56,144 @@ init([Player1, Player2, Why]) ->
     monitor(process, Player2),
     ok = user_controller:send_game_started(Player1, self(), black, Why),
     ok = user_controller:send_game_started(Player2, self(), white, Why),
-    {ok, #game{ black = Player1
-              , white = Player2
-              }}.
+    {ok, awaiting_move, #state{ black = Player1
+                              , white = Player2
+                              }}.
 
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% Handling call messages
+%% There should be one instance of this function for each possible
+%% state name. Whenever a gen_fsm receives an event sent using
+%% gen_fsm:send_event/2, the instance of this function with the same
+%% name as the current state name StateName is called to handle
+%% the event. It is also called if a timeout occurs.
 %%
-%% @spec handle_call(Request, From, State) ->
-%%                                   {reply, Reply, State} |
-%%                                   {reply, Reply, State, Timeout} |
-%%                                   {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, Reply, State} |
-%%                                   {stop, Reason, State}
+%% @spec state_name(Event, State) ->
+%%                   {next_state, NextStateName, NextState} |
+%%                   {next_state, NextStateName, NextState, Timeout} |
+%%                   {stop, Reason, NewState}
 %% @end
 %%--------------------------------------------------------------------
-handle_call({move, Move}, {Pid, _Tag}, State) ->
+state_name(_Event, State) ->
+    {next_state, state_name, State}.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% There should be one instance of this function for each possible
+%% state name. Whenever a gen_fsm receives an event sent using
+%% gen_fsm:sync_send_event/[2,3], the instance of this function with
+%% the same name as the current state name StateName is called to
+%% handle the event.
+%%
+%% @spec state_name(Event, From, State) ->
+%%                   {next_state, NextStateName, NextState} |
+%%                   {next_state, NextStateName, NextState, Timeout} |
+%%                   {reply, Reply, NextStateName, NextState} |
+%%                   {reply, Reply, NextStateName, NextState, Timeout} |
+%%                   {stop, Reason, NewState} |
+%%                   {stop, Reason, Reply, NewState}
+%% @end
+%%--------------------------------------------------------------------
+awaiting_move({move, resign}, {Pid, _Tag}, State) ->
+    case State of
+        #state{black = Pid} -> io:format("black resign\n");
+        #state{white = Pid} -> io:format("white resign\n")
+    end,
+    {stop, normal, ok, State};
+
+awaiting_move({move, pass}, {Pid, _Tag}, S) when S#state.opponent_passed ->
+    case S of
+        #state{black = Pid} -> io:format("black pass\n");
+        #state{white = Pid} -> io:format("white pass\n")
+    end,
+    {stop, normal, ok, S};
+
+awaiting_move({move, Move}, {Pid, _Tag}, S) ->
     %% TODO: Check if move is legal
     %% TODO: Record the move
-    Opponent = case State of
-                   #game{black = Pid} -> State#game.white;
-                   #game{white = Pid} -> State#game.black
+    case S of
+        #state{black = Pid} -> io:format("black ~p\n", [Move]);
+        #state{white = Pid} -> io:format("white ~p\n", [Move])
+    end,
+    Opponent = case S of
+                   #state{black = Pid} -> S#state.white;
+                   #state{white = Pid} -> S#state.black
                end,
     ok = user_controller:send_move(Opponent, self(), Move),
-    Reply = ok,
-    {reply, Reply, State};
+    {reply, ok, awaiting_move, S#state{opponent_passed = Move =:= pass}}.
 
-handle_call(_Request, _From, State) ->
-    Reply = ok,
-    {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% Handling cast messages
+%% Whenever a gen_fsm receives an event sent using
+%% gen_fsm:send_all_state_event/2, this function is called to handle
+%% the event.
 %%
-%% @spec handle_cast(Msg, State) -> {noreply, State} |
-%%                                  {noreply, State, Timeout} |
-%%                                  {stop, Reason, State}
+%% @spec handle_event(Event, StateName, State) ->
+%%                   {next_state, NextStateName, NextState} |
+%%                   {next_state, NextStateName, NextState, Timeout} |
+%%                   {stop, Reason, NewState}
 %% @end
 %%--------------------------------------------------------------------
-handle_cast(_Msg, State) ->
-    {noreply, State}.
+handle_event(_Event, StateName, State) ->
+    {next_state, StateName, State}.
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% Handling all non call/cast messages
+%% Whenever a gen_fsm receives an event sent using
+%% gen_fsm:sync_send_all_state_event/[2,3], this function is called
+%% to handle the event.
 %%
-%% @spec handle_info(Info, State) -> {noreply, State} |
-%%                                   {noreply, State, Timeout} |
-%%                                   {stop, Reason, State}
+%% @spec handle_sync_event(Event, From, StateName, State) ->
+%%                   {next_state, NextStateName, NextState} |
+%%                   {next_state, NextStateName, NextState, Timeout} |
+%%                   {reply, Reply, NextStateName, NextState} |
+%%                   {reply, Reply, NextStateName, NextState, Timeout} |
+%%                   {stop, Reason, NewState} |
+%%                   {stop, Reason, Reply, NewState}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({'DOWN', _MonitorRef, _Type, _Pid, _Info}, State) ->
+handle_sync_event(_Event, _From, StateName, State) ->
+    Reply = ok,
+    {reply, Reply, StateName, State}.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% This function is called by a gen_fsm when it receives any
+%% message other than a synchronous or asynchronous event
+%% (or a system message).
+%%
+%% @spec handle_info(Info,StateName,State)->
+%%                   {next_state, NextStateName, NextState} |
+%%                   {next_state, NextStateName, NextState, Timeout} |
+%%                   {stop, Reason, NewState}
+%% @end
+%%--------------------------------------------------------------------
+handle_info({'DOWN', _MonitorRef, _Type, _Pid, _Info}, _StateName, State) ->
     %% TODO: A user controller process died, mark player as away
     {noreply, State};
 
-handle_info(_Info, State) ->
-    {noreply, State}.
+handle_info(_Info, StateName, State) ->
+    {next_state, StateName, State}.
 
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
-%% This function is called by a gen_server when it is about to
+%% This function is called by a gen_fsm when it is about to
 %% terminate. It should be the opposite of Module:init/1 and do any
-%% necessary cleaning up. When it returns, the gen_server terminates
-%% with Reason. The return value is ignored.
+%% necessary cleaning up. When it returns, the gen_fsm terminates with
+%% Reason. The return value is ignored.
 %%
-%% @spec terminate(Reason, State) -> void()
+%% @spec terminate(Reason, StateName, State) -> void()
 %% @end
 %%--------------------------------------------------------------------
-terminate(_Reason, _State) ->
+terminate(_Reason, _StateName, _State) ->
     ok.
 
 %%--------------------------------------------------------------------
@@ -135,12 +201,20 @@ terminate(_Reason, _State) ->
 %% @doc
 %% Convert process state when code is changed
 %%
-%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
+%% @spec code_change(OldVsn, StateName, State, Extra) ->
+%%                   {ok, StateName, NewState}
 %% @end
 %%--------------------------------------------------------------------
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+code_change(_OldVsn, StateName, State, _Extra) ->
+    {ok, StateName, State}.
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+
+
+
+
+
+
