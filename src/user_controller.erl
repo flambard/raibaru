@@ -11,7 +11,7 @@
         , recv_say/3
         , recv_game_invitation_accept/2
         , recv_game_invitation_deny/2
-        , recv_game_invitation/2
+        , recv_game_invitation/3
         , recv_move/3
         ]).
 
@@ -65,8 +65,8 @@ recv_game_invitation_accept(User, Invitation) ->
 recv_game_invitation_deny(User, Invitation) ->
     gen_server:cast(User, {recv_game_invitation_deny, Invitation}).
 
-recv_game_invitation(User, Opponent) ->
-    gen_server:call(User, {recv_game_invitation, Opponent}).
+recv_game_invitation(User, Opponent, Color) ->
+    gen_server:call(User, {recv_game_invitation, Opponent, Color}).
 
 recv_move(User, Game, Move) ->
     gen_server:call(User, {recv_move, Game, Move}).
@@ -133,8 +133,8 @@ handle_call({create_room, Name}, _From, S) ->
     {ok, Room} = room_sup:start_room(Name),
     {reply, {ok, Room}, S};
 
-handle_call({recv_game_invitation, Opponent}, _From, S) ->
-    Invitation = game_invitation:new(),
+handle_call({recv_game_invitation, Opponent, Color}, _From, S) ->
+    Invitation = game_invitation:new(Color),
     user_controller:send_game_invitation(Opponent, Invitation),
     {reply, {ok, Invitation}, S};
 
@@ -161,9 +161,16 @@ handle_cast({recv_say, Room, Message}, State) ->
     {noreply, State};
 
 handle_cast({recv_game_invitation_accept, Invitation}, S) ->
-    {ok, _Game} = game_sup:start_game(game_invitation:challenger(Invitation),
-                                      self(),
-                                      {game_invitation, Invitation}),
+    case game_invitation:challenger_color(Invitation) of
+        black ->
+            game_sup:start_game(game_invitation:challenger(Invitation),
+                                self(),
+                                {game_invitation, Invitation});
+        white ->
+            game_sup:start_game(self(),
+                                game_invitation:challenger(Invitation),
+                                {game_invitation, Invitation})
+    end,
     {noreply, S};
 
 handle_cast({recv_game_invitation_deny, Invitation}, S) ->

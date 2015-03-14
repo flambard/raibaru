@@ -1,7 +1,7 @@
 -module(game_invitation).
 
 %% API
--export([ new/0
+-export([ new/1
         , challenger/1
         , challenger_color/1
         , opponent_color/1
@@ -19,11 +19,11 @@
 %%% API
 %%%===================================================================
 
-new() ->
+new(Color) ->
     #invitation{ tag = make_ref()
                , challenger = self()
-               , challenger_color = white
-               , opponent_color = black
+               , challenger_color = Color
+               , opponent_color = other_color(Color)
                }.
 
 challenger(#invitation{challenger = C}) -> C.
@@ -36,3 +36,6 @@ opponent_color(#invitation{opponent_color = C}) -> C.
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+
+other_color(black) -> white;
+other_color(white) -> black.
