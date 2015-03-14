@@ -8,7 +8,8 @@
         ]).
 
 -record(invitation,
-        { challenger
+        { tag
+        , challenger
         , challenger_color
         , opponent_color
         }).
@@ -19,7 +20,8 @@
 %%%===================================================================
 
 new() ->
-    #invitation{ challenger = self()
+    #invitation{ tag = make_ref()
+               , challenger = self()
                , challenger_color = white
                , opponent_color = black
                }.
