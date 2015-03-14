@@ -148,7 +148,7 @@ handle_call({recv_game_invitation_deny, Invitation}, _From, S) ->
 handle_call({recv_game_invitation, Opponent}, _From, S) ->
     Invitation = game_invitation:new(),
     user_controller:send_game_invitation(Opponent, Invitation),
-    {reply, ok, S};
+    {reply, {ok, Invitation}, S};
 
 handle_call({recv_move, Game, Move}, _From, S) ->
     Reply = game:move(Game, Move),
