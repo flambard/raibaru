@@ -2,7 +2,7 @@
 -behaviour(gen_server).
 
 %% API
--export([ start_link/2
+-export([ start_link/3
         , move/2
         ]).
 
@@ -25,8 +25,8 @@
 %%% API
 %%%===================================================================
 
-start_link(Player1, Player2) ->
-    gen_server:start_link(?MODULE, [Player1, Player2], []).
+start_link(Player1, Player2, Why) ->
+    gen_server:start_link(?MODULE, [Player1, Player2, Why], []).
 
 move(Game, Move) ->
     gen_server:call(Game, {move, Move}).
@@ -47,9 +47,11 @@ move(Game, Move) ->
 %%                     {stop, Reason}
 %% @end
 %%--------------------------------------------------------------------
-init([Player1, Player2]) ->
+init([Player1, Player2, Why]) ->
     monitor(process, Player1),
     monitor(process, Player2),
+    ok = user_controller:send_game_started(Player1, self(), Why),
+    ok = user_controller:send_game_started(Player2, self(), Why),
     {ok, #game{ black = Player1
               , white = Player2
               }}.

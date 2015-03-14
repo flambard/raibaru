@@ -18,8 +18,8 @@
 %% Outbound API
 -export([ send_message/2
         , send_game_invitation/2
-        , send_game_invitation_accepted/3
         , send_game_invitation_denied/2
+        , send_game_started/3
         , send_move/3
         ]).
 
@@ -82,11 +82,11 @@ send_message(User, Message) ->
 send_game_invitation(User, Invitation) ->
     gen_server:cast(User, {send_game_invitation, Invitation}).
 
-send_game_invitation_accepted(User, Invitation, Game) ->
-    gen_server:cast(User, {send_game_invitation_accepted, Invitation, Game}).
-
 send_game_invitation_denied(User, Invitation) ->
     gen_server:cast(User, {send_game_invitation_denied, Invitation}).
+
+send_game_started(User, Game, Why) ->
+    gen_server:cast(User, {send_game_started, Game, Why}).
 
 send_move(User, Game, Move) ->
     gen_server:cast(User, {send_move, Game, Move}).
@@ -134,11 +134,10 @@ handle_call({create_room, Name}, _From, S) ->
     {reply, {ok, Room}, S};
 
 handle_call({recv_game_invitation_accept, Invitation}, _From, S) ->
-    Opponent = game_invitation:challenger(Invitation),
-    {ok, Game} = game_sup:start_game(Opponent, self()),
-    monitor(process, Game),
-    user_controller:send_game_invitation_accepted(Opponent, Invitation, Game),
-    {reply, {ok, Game}, S};
+    {ok, _Game} = game_sup:start_game(game_invitation:challenger(Invitation),
+                                      self(),
+                                      {game_invitation, Invitation}),
+    {reply, ok, S};
 
 handle_call({recv_game_invitation_deny, Invitation}, _From, S) ->
     Opponent = game_invitation:challenger(Invitation),
@@ -180,15 +179,14 @@ handle_cast({send_game_invitation, Invitation}, S = #user{module = M}) ->
     M:send_game_invitation(S#user.adapter, Invitation),
     {noreply, S};
 
-handle_cast({send_game_invitation_accepted, Invitation, Game}, S) ->
-    monitor(process, Game),
-    M = S#user.module,
-    M:send_game_invitation_accepted(S#user.adapter, Invitation, Game),
-    {noreply, S};
-
 handle_cast({send_game_invitation_denied, Invitation}, S) ->
     M = S#user.module,
     M:send_game_invitation_denied(S#user.adapter, Invitation),
+    {noreply, S};
+
+handle_cast({send_game_started, Game, Why}, S = #user{module = M}) ->
+    monitor(process, Game),
+    M:send_game_started(S#user.adapter, Game, Why),
     {noreply, S};
 
 handle_cast({send_move, Game, Move}, S) ->

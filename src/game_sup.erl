@@ -3,7 +3,7 @@
 
 %% API
 -export([ start_link/0
-        , start_game/2
+        , start_game/3
         ]).
 
 %% Supervisor callbacks
@@ -18,8 +18,8 @@
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
-start_game(Player1, Player2) ->
-    supervisor:start_child(?SERVER, [Player1, Player2]).
+start_game(Player1, Player2, Why) ->
+    supervisor:start_child(?SERVER, [Player1, Player2, Why]).
 
 
 %%%===================================================================
