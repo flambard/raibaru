@@ -60,10 +60,10 @@ recv_say(User, Room, Message) ->
     gen_server:cast(User, {recv_say, Room, Message}).
 
 recv_game_invitation_accept(User, Invitation) ->
-    gen_server:call(User, {recv_game_invitation_accept, Invitation}).
+    gen_server:cast(User, {recv_game_invitation_accept, Invitation}).
 
 recv_game_invitation_deny(User, Invitation) ->
-    gen_server:call(User, {recv_game_invitation_deny, Invitation}).
+    gen_server:cast(User, {recv_game_invitation_deny, Invitation}).
 
 recv_game_invitation(User, Opponent) ->
     gen_server:call(User, {recv_game_invitation, Opponent}).
@@ -133,17 +133,6 @@ handle_call({create_room, Name}, _From, S) ->
     {ok, Room} = room_sup:start_room(Name),
     {reply, {ok, Room}, S};
 
-handle_call({recv_game_invitation_accept, Invitation}, _From, S) ->
-    {ok, _Game} = game_sup:start_game(game_invitation:challenger(Invitation),
-                                      self(),
-                                      {game_invitation, Invitation}),
-    {reply, ok, S};
-
-handle_call({recv_game_invitation_deny, Invitation}, _From, S) ->
-    Opponent = game_invitation:challenger(Invitation),
-    user_controller:send_game_invitation_denied(Opponent, Invitation),
-    {reply, ok, S};
-
 handle_call({recv_game_invitation, Opponent}, _From, S) ->
     Invitation = game_invitation:new(),
     user_controller:send_game_invitation(Opponent, Invitation),
@@ -170,6 +159,17 @@ handle_call(_Request, _From, State) ->
 handle_cast({recv_say, Room, Message}, State) ->
     ok = room:say(Room, Message),
     {noreply, State};
+
+handle_cast({recv_game_invitation_accept, Invitation}, S) ->
+    {ok, _Game} = game_sup:start_game(game_invitation:challenger(Invitation),
+                                      self(),
+                                      {game_invitation, Invitation}),
+    {noreply, S};
+
+handle_cast({recv_game_invitation_deny, Invitation}, S) ->
+    Opponent = game_invitation:challenger(Invitation),
+    user_controller:send_game_invitation_denied(Opponent, Invitation),
+    {noreply, S};
 
 handle_cast({send_message, Message}, S = #user{module = M}) ->
     M:send_message(S#user.adapter, Message),
