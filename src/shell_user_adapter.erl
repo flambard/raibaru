@@ -12,7 +12,7 @@
         , send_game_invitation/2
         , send_game_invitation_accepted/3
         , send_game_invitation_denied/2
-        , send_game_started/3
+        , send_game_started/4
         , send_move/3
         ]).
 
@@ -56,8 +56,8 @@ send_game_invitation_denied(Pid, Invitation) ->
     Pid ! {user_controller, self(), {invitation_denied, Invitation}},
     ok.
 
-send_game_started(Pid, Game, Why) ->
-    Pid ! {user_controller, self(), {game_started, Game, Why}},
+send_game_started(Pid, Game, Color, Why) ->
+    Pid ! {user_controller, self(), {game_started, Game, Color, Why}},
     ok.
 
 send_move(Pid, Game, Move) ->

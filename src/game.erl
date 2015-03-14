@@ -50,8 +50,8 @@ move(Game, Move) ->
 init([Player1, Player2, Why]) ->
     monitor(process, Player1),
     monitor(process, Player2),
-    ok = user_controller:send_game_started(Player1, self(), Why),
-    ok = user_controller:send_game_started(Player2, self(), Why),
+    ok = user_controller:send_game_started(Player1, self(), black, Why),
+    ok = user_controller:send_game_started(Player2, self(), white, Why),
     {ok, #game{ black = Player1
               , white = Player2
               }}.

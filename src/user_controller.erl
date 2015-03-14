@@ -19,7 +19,7 @@
 -export([ send_message/2
         , send_game_invitation/2
         , send_game_invitation_denied/2
-        , send_game_started/3
+        , send_game_started/4
         , send_move/3
         ]).
 
@@ -85,8 +85,8 @@ send_game_invitation(User, Invitation) ->
 send_game_invitation_denied(User, Invitation) ->
     gen_server:cast(User, {send_game_invitation_denied, Invitation}).
 
-send_game_started(User, Game, Why) ->
-    gen_server:cast(User, {send_game_started, Game, Why}).
+send_game_started(User, Game, Color, Why) ->
+    gen_server:cast(User, {send_game_started, Game, Color, Why}).
 
 send_move(User, Game, Move) ->
     gen_server:cast(User, {send_move, Game, Move}).
@@ -184,9 +184,9 @@ handle_cast({send_game_invitation_denied, Invitation}, S) ->
     M:send_game_invitation_denied(S#user.adapter, Invitation),
     {noreply, S};
 
-handle_cast({send_game_started, Game, Why}, S = #user{module = M}) ->
+handle_cast({send_game_started, Game, Color, Why}, S = #user{module = M}) ->
     monitor(process, Game),
-    M:send_game_started(S#user.adapter, Game, Why),
+    M:send_game_started(S#user.adapter, Game, Color, Why),
     {noreply, S};
 
 handle_cast({send_move, Game, Move}, S) ->

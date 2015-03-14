@@ -14,7 +14,7 @@
         , send_game_invitation/2
         , send_game_invitation_accepted/3
         , send_game_invitation_denied/2
-        , send_game_started/3
+        , send_game_started/4
         , send_move/3
         ]).
 
@@ -65,8 +65,8 @@ send_game_invitation_denied(_Server, _Invitation) ->
     %% Ignored, GNU Go does not send game invitations.
     ok.
 
-send_game_started(Server, Game, Why) ->
-    gen_server:cast(Server, {game_started, Game, Why}).
+send_game_started(Server, Game, Color, Why) ->
+    gen_server:cast(Server, {game_started, Game, Color, Why}).
 
 send_move(Server, Game, Move) ->
     gen_server:cast(Server, {move, Game, Move}).
@@ -134,8 +134,7 @@ handle_cast({game_invitation, Invitation}, State) ->
     ok = user_controller:recv_game_invitation_accept(UC, Invitation),
     {noreply, State};
 
-handle_cast({game_started, Game, {game_invitation, Inv}}, S) ->
-    Color = game_invitation:opponent_color(Inv),
+handle_cast({game_started, Game, Color, _Why}, S) ->
     {ok, Ref} = gnugo:new(),
     NewMap = gnugo_game_map:add(Game, Ref, Color, S#state.map),
     {noreply, S#state{map = NewMap}};
