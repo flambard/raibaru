@@ -21,6 +21,13 @@
 -callback send_game_invitation_denied(Adapter :: pid(), Invitation :: term()) ->
     ok.
 
+-callback send_game_started(Adapter :: pid(),
+                            Game :: term(),
+                            GameSettings :: term(),
+                            Color :: atom(),
+                            Why :: term()) ->
+    ok.
+
 -callback send_move(Adapter :: pid(), Game :: term(), Move :: term()) ->
     ok.
 
