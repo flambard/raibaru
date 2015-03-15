@@ -15,10 +15,8 @@
             , socket_listener_sup
             , socket_listener
             , socket_user_adapter
-            , gnugo
             , gnugo_user_adapter
             , gnugo_game_map
-            , gtp
             ]},
   {registered, [ raibaru_sup
                , lobby
@@ -32,6 +30,7 @@
                  , stdlib
                  , sasl
                  , matchmaker
+                 , gnugo
                  ]},
   {env, []}
  ]}.
