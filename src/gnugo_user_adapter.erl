@@ -134,10 +134,17 @@ handle_cast({game_invitation, Invitation}, State) ->
     ok = user_controller:recv_game_invitation_accept(UC, Invitation),
     {noreply, State};
 
-handle_cast({game_started, Game, _GameSettings, Color, _Why}, S) ->
+handle_cast({game_started, Game, GameSettings, Color, _Why}, S) ->
+    %% TODO: Specify ruleset for GNU Go
     {ok, Ref} = gnugo:new(),
     NewMap = gnugo_game_map:add(Game, Ref, Color, S#state.map),
-    %% TODO: Set up GNU Go using the game settings (boardsize, komi, handicap..)
+    ok = gnugo:clear_board(Ref),
+    ok = gnugo:boardsize(Ref, game_settings:boardsize(GameSettings)),
+    ok = gnugo:komi(Ref, game_settings:komi(GameSettings)),
+    case game_settings:handicap(GameSettings) of
+        H when H >= 2 -> {ok, _Vs} = gnugo:fixed_handicap(Ref, H);
+        _             -> ok
+    end,
     case Color of
         white -> ok;
         black -> ok = gnugo:genmove_async(Ref, Color)
