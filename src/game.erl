@@ -2,7 +2,7 @@
 -behaviour(gen_fsm).
 
 %% API
--export([ start_link/3
+-export([ start_link/4
         , move/2
         ]).
 
@@ -18,7 +18,8 @@
         ]).
 
 -record(state,
-        { black
+        { settings
+        , black
         , white
         , opponent_passed = false
         }).
@@ -27,8 +28,8 @@
 %%% API
 %%%===================================================================
 
-start_link(Player1, Player2, Why) ->
-    gen_fsm:start_link(?MODULE, [Player1, Player2, Why], []).
+start_link(Player1, Player2, GameSettings, Why) ->
+    gen_fsm:start_link(?MODULE, [Player1, Player2, GameSettings, Why], []).
 
 move(Game, Move) ->
     gen_fsm:sync_send_event(Game, {move, Move}).
@@ -51,12 +52,13 @@ move(Game, Move) ->
 %%                     {stop, StopReason}
 %% @end
 %%--------------------------------------------------------------------
-init([Player1, Player2, Why]) ->
+init([Player1, Player2, Settings, Why]) ->
     monitor(process, Player1),
     monitor(process, Player2),
-    ok = user_controller:send_game_started(Player1, self(), black, Why),
-    ok = user_controller:send_game_started(Player2, self(), white, Why),
-    {ok, awaiting_move, #state{ black = Player1
+    user_controller:send_game_started(Player1, self(), Settings, black, Why),
+    user_controller:send_game_started(Player2, self(), Settings, white, Why),
+    {ok, awaiting_move, #state{ settings = Settings
+                              , black = Player1
                               , white = Player2
                               }}.
 

@@ -11,7 +11,7 @@
         , recv_say/3
         , recv_game_invitation_accept/2
         , recv_game_invitation_deny/2
-        , recv_game_invitation/3
+        , recv_game_invitation/4
         , recv_move/3
         ]).
 
@@ -19,7 +19,7 @@
 -export([ send_message/2
         , send_game_invitation/2
         , send_game_invitation_denied/2
-        , send_game_started/4
+        , send_game_started/5
         , send_move/3
         ]).
 
@@ -65,8 +65,9 @@ recv_game_invitation_accept(User, Invitation) ->
 recv_game_invitation_deny(User, Invitation) ->
     gen_server:cast(User, {recv_game_invitation_deny, Invitation}).
 
-recv_game_invitation(User, Opponent, Color) ->
-    gen_server:call(User, {recv_game_invitation, Opponent, Color}).
+recv_game_invitation(User, Opponent, GameSettings, Color) ->
+    gen_server:call(User,
+                    {recv_game_invitation, Opponent, GameSettings, Color}).
 
 recv_move(User, Game, Move) ->
     gen_server:call(User, {recv_move, Game, Move}).
@@ -85,8 +86,8 @@ send_game_invitation(User, Invitation) ->
 send_game_invitation_denied(User, Invitation) ->
     gen_server:cast(User, {send_game_invitation_denied, Invitation}).
 
-send_game_started(User, Game, Color, Why) ->
-    gen_server:cast(User, {send_game_started, Game, Color, Why}).
+send_game_started(User, Game, GameSettings, Color, Why) ->
+    gen_server:cast(User, {send_game_started, Game, GameSettings, Color, Why}).
 
 send_move(User, Game, Move) ->
     gen_server:cast(User, {send_move, Game, Move}).
@@ -133,8 +134,8 @@ handle_call({create_room, Name}, _From, S) ->
     {ok, Room} = room_sup:start_room(Name),
     {reply, {ok, Room}, S};
 
-handle_call({recv_game_invitation, Opponent, Color}, _From, S) ->
-    Invitation = game_invitation:new(Color),
+handle_call({recv_game_invitation, Opponent, GameSettings, Color}, _From, S) ->
+    Invitation = game_invitation:new(GameSettings, Color),
     user_controller:send_game_invitation(Opponent, Invitation),
     {reply, {ok, Invitation}, S};
 
@@ -170,10 +171,12 @@ handle_cast({recv_game_invitation_accept, Invitation}, S) ->
         black ->
             game_sup:start_game(game_invitation:challenger(Invitation),
                                 self(),
+                                game_invitation:game_settings(Invitation),
                                 {game_invitation, Invitation});
         white ->
             game_sup:start_game(self(),
                                 game_invitation:challenger(Invitation),
+                                game_invitation:game_settings(Invitation),
                                 {game_invitation, Invitation})
     end,
     {noreply, S};
@@ -196,9 +199,10 @@ handle_cast({send_game_invitation_denied, Invitation}, S) ->
     M:send_game_invitation_denied(S#user.adapter, Invitation),
     {noreply, S};
 
-handle_cast({send_game_started, Game, Color, Why}, S = #user{module = M}) ->
+handle_cast({send_game_started, Game, GameSettings, Color, Why}, S) ->
     monitor(process, Game),
-    M:send_game_started(S#user.adapter, Game, Color, Why),
+    M = S#user.module,
+    M:send_game_started(S#user.adapter, Game, GameSettings, Color, Why),
     {noreply, S};
 
 handle_cast({send_move, Game, Move}, S) ->

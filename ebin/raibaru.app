@@ -8,6 +8,7 @@
             , room
             , game
             , game_invitation
+            , game_settings
             , game_sup
             , user_controller_sup
             , user_controller
