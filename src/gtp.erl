@@ -33,11 +33,11 @@ command({place_free_handicap, NumberOfStones}) ->
     io_lib:format("place_free_handicap ~B\n", [NumberOfStones]);
 command({set_free_handicap, Vertices}) ->
     io_lib:format("set_free_handicap ~s\n",
-                  [string:join([vertex:to_iolist(V) || V <- Vertices], " ")]);
+                  [string:join([vertex_to_iolist(V) || V <- Vertices], " ")]);
 command({play, Color, Move}) ->
     MoveArg = case Move of
                   pass   -> "PASS";
-                  Vertex -> vertex:to_iolist(Vertex)
+                  Vertex -> vertex_to_iolist(Vertex)
               end,
     io_lib:format("play ~p ~s\n", [Color, MoveArg]);
 command({genmove, Color}) ->
@@ -106,10 +106,10 @@ parse_result(clear_board, "") ->
 parse_result({komi, _NewKomi}, "") ->
     ok;
 parse_result({fixed_handicap, _NumberOfStones}, Result) ->
-    Vertices = [vertex:from_string(V) || V <- string:tokens(Result, " ")],
+    Vertices = [vertex_from_string(V) || V <- string:tokens(Result, " ")],
     {ok, Vertices};
 parse_result({place_free_handicap, _NumberOfStones}, Result) ->
-    Vertices = [vertex:from_string(V) || V <- string:tokens(Result, " ")],
+    Vertices = [vertex_from_string(V) || V <- string:tokens(Result, " ")],
     {ok, Vertices};
 parse_result({set_free_handicap, _Vertices}, "") ->
     ok;
@@ -119,7 +119,7 @@ parse_result({genmove, _Color}, Result) ->
     Move = case Result of
                "PASS"   -> pass;
                "resign" -> resign;
-               Vertex   -> vertex:from_string(Vertex)
+               Vertex   -> vertex_from_string(Vertex)
            end,
     {ok, Move};
 parse_result(undo, "") ->
@@ -131,7 +131,7 @@ parse_result({time_left, _Color, _Time, _Stones}, "") ->
 parse_result(final_score, Result) ->
     {ok, Result};
 parse_result({final_status_list, _Status}, Result) ->
-    Vertices = [vertex:from_string(V) || V <- string:tokens(Result, " ")],
+    Vertices = [vertex_from_string(V) || V <- string:tokens(Result, " ")],
     {ok, Vertices};
 parse_result({loadsgf, _FileName, _MoveNumber}, "") ->
     ok;
@@ -139,9 +139,17 @@ parse_result({reg_genmove, _Color}, Result) ->
     Move = case Result of
                "PASS"   -> pass;
                "resign" -> resign;
-               Vertex   -> vertex:from_string(Vertex)
+               Vertex   -> vertex_from_string(Vertex)
            end,
     {ok, Move};
 parse_result(showboard, Result) ->
     io:format([Result, "\n\n"]),
     ok.
+
+
+
+vertex_from_string([Letter | Digits]) ->
+    {list_to_atom(string:to_lower([Letter])), list_to_integer(Digits)}.
+
+vertex_to_iolist({Letter, Digits}) ->
+    io_lib:format("~p~B", [Letter, Digits]).

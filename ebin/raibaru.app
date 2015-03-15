@@ -19,7 +19,6 @@
             , gnugo_user_adapter
             , gnugo_game_map
             , gtp
-            , vertex
             ]},
   {registered, [ raibaru_sup
                , lobby
