@@ -136,7 +136,7 @@ handle_cast({game_invitation, Invitation}, State) ->
 
 handle_cast({game_started, Game, GameSettings, Color, _Why}, S) ->
     %% TODO: Specify ruleset for GNU Go
-    {ok, Ref} = gnugo:new(),
+    {ok, Ref} = gnugo:start(),
     NewMap = gnugo_game_map:add(Game, Ref, Color, S#state.map),
     ok = gnugo:clear_board(Ref),
     ok = gnugo:boardsize(Ref, game_settings:boardsize(GameSettings)),

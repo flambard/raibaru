@@ -1,6 +1,6 @@
 -module(gnugo).
 
--export([ new/0
+-export([ start/0
         , receive_reply/1
         , receive_reply/2
         ]).
@@ -36,7 +36,7 @@
 %%% API
 %%%===================================================================
 
-new() ->
+start() ->
     case os:find_executable("gnugo") of
         false    -> {error, could_not_find_gnugo_executable};
         FilePath ->
