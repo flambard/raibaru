@@ -30,6 +30,7 @@
                  , stdlib
                  , sasl
                  , matchmaker
+                 , timekeeper
                  , gnugo
                  ]},
   {env, []}
