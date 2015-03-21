@@ -24,6 +24,7 @@
                , game_sup
                , socket_listener_sup
                , user_controller_sup
+               , raibaru_matchmaker
                ]},
   {mod, {raibaru_app, []}},
   {applications, [ kernel

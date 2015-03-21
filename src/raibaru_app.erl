@@ -11,6 +11,7 @@
 %%%===================================================================
 
 start(_StartType, _StartArgs) ->
+    matchmaker:start_matchmaker(raibaru_matchmaker, game_sup, game_settings),
     raibaru_sup:start_link().
 
 stop(_State) ->
