@@ -9,6 +9,7 @@
 -export([ recv_get_room_list/1
         , recv_create_room/2
         , recv_say/3
+        , recv_find_match/1
         , recv_game_invitation_accept/2
         , recv_game_invitation_deny/2
         , recv_game_invitation/4
@@ -58,6 +59,9 @@ recv_create_room(User, Name) ->
 
 recv_say(User, Room, Message) ->
     gen_server:cast(User, {recv_say, Room, Message}).
+
+recv_find_match(User) ->
+    gen_server:cast(User, recv_find_match).
 
 recv_game_invitation_accept(User, Invitation) ->
     gen_server:cast(User, {recv_game_invitation_accept, Invitation}).
@@ -159,6 +163,10 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast({recv_say, Room, Message}, State) ->
     ok = room:say(Room, Message),
+    {noreply, State};
+
+handle_cast(recv_find_match, State) ->
+    raibaru_matchmaker:find_match(self()),
     {noreply, State};
 
 handle_cast({recv_game_invitation_accept, Invitation}, S) ->
