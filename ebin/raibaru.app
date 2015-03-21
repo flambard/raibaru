@@ -2,6 +2,7 @@
  [{description, ""},
   {vsn, "0.0.1"},
   {modules, [ raibaru_app
+            , raibaru_matchmaker
             , raibaru_sup
             , lobby
             , room_sup

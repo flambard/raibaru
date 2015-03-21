@@ -1,21 +1,21 @@
--module(raibaru_app).
--behaviour(application).
+-module(raibaru_matchmaker).
 
-%% Application callbacks
--export([ start/2
-        , stop/1
+%% API
+-export([ start/0
+        , find_match/1
         ]).
 
+-define(SERVER, raibaru_matchmaker).
+
 %%%===================================================================
-%%% Application callbacks
+%%% API
 %%%===================================================================
 
-start(_StartType, _StartArgs) ->
-    raibaru_matchmaker:start(),
-    raibaru_sup:start_link().
+start() ->
+    matchmaker:start_matchmaker(?SERVER, game_sup, game_settings).
 
-stop(_State) ->
-    ok.
+find_match(UserController) ->
+    matchmaker:find_match(?SERVER, UserController).
 
 
 %%%===================================================================
