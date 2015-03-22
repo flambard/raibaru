@@ -10,6 +10,9 @@
 -export([ start_game/2
         ]).
 
+-record(player_info,
+        {}).
+
 -define(SERVER, raibaru_matchmaker).
 
 %%%===================================================================
@@ -20,14 +23,16 @@ start() ->
     matchmaker:start_matchmaker(?SERVER, ?MODULE).
 
 find_match(UserController) ->
-    matchmaker:find_match(?SERVER, UserController).
+    Info = #player_info{},
+    matchmaker:find_match(?SERVER, UserController, Info).
 
 
 %%%===================================================================
 %%% matchmaker callbacks
 %%%===================================================================
 
-start_game(Player1, Player2) ->
+start_game({Player1, _Info1}, {Player2, _Info2}) ->
+    %% TODO: Use player info to determine boardsize, handicap, komi, ruleset.
     game_sup:start_game(Player1, Player2, game_settings:new(), matchmaker),
     ok.
 
