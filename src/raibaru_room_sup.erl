@@ -1,4 +1,4 @@
--module(room_sup).
+-module(raibaru_room_sup).
 -behaviour(supervisor).
 
 %% API

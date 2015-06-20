@@ -135,7 +135,7 @@ handle_call(get_room_list, _From, S = #user{joined_rooms = Rooms}) ->
     {reply, Reply, S};
 
 handle_call({create_room, Name}, _From, S) ->
-    {ok, Room} = room_sup:start_room(Name),
+    {ok, Room} = raibaru_room_sup:start_room(Name),
     {reply, {ok, Room}, S};
 
 handle_call({recv_game_invitation, Opponent, GameSettings, Color}, _From, S) ->

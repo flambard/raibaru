@@ -3,7 +3,7 @@
   {vsn, "0.0.1"},
   {registered, [ raibaru_core_sup
                , raibaru_lobby
-               , room_sup
+               , raibaru_room_sup
                , game_sup
                , socket_listener_sup
                , user_controller_sup

@@ -32,12 +32,12 @@ init([]) ->
              worker,
              [raibaru_lobby]},
 
-    RoomSup = {room_sup,
-               {room_sup, start_link, []},
+    RoomSup = {raibaru_room_sup,
+               {raibaru_room_sup, start_link, []},
                permanent,
                2000,
                supervisor,
-               [room_sup]},
+               [raibaru_room_sup]},
 
     GameSup = {game_sup,
                {game_sup, start_link, []},
