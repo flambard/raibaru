@@ -139,7 +139,7 @@ handle_call({create_room, Name}, _From, S) ->
     {reply, {ok, Room}, S};
 
 handle_call({recv_game_invitation, Opponent, GameSettings, Color}, _From, S) ->
-    Invitation = game_invitation:new(GameSettings, Color),
+    Invitation = rc_game_invitation:new(GameSettings, Color),
     user_controller:send_game_invitation(Opponent, Invitation),
     {reply, {ok, Invitation}, S};
 
@@ -171,28 +171,28 @@ handle_cast(recv_find_match, State) ->
 
 handle_cast({recv_game_invitation_accept, Invitation}, S) ->
     ChallengerColor =
-        case game_invitation:challenger_color(Invitation) of
+        case rc_game_invitation:challenger_color(Invitation) of
             nigiri -> random_color();
             Color  -> Color
         end,
     case ChallengerColor of
         black ->
             raibaru_game_sup:start_game(
-              game_invitation:challenger(Invitation),
+              rc_game_invitation:challenger(Invitation),
               self(),
-              game_invitation:game_settings(Invitation),
+              rc_game_invitation:game_settings(Invitation),
               {game_invitation, Invitation});
         white ->
             raibaru_game_sup:start_game(
               self(),
-              game_invitation:challenger(Invitation),
-              game_invitation:game_settings(Invitation),
+              rc_game_invitation:challenger(Invitation),
+              rc_game_invitation:game_settings(Invitation),
               {game_invitation, Invitation})
     end,
     {noreply, S};
 
 handle_cast({recv_game_invitation_deny, Invitation}, S) ->
-    Opponent = game_invitation:challenger(Invitation),
+    Opponent = rc_game_invitation:challenger(Invitation),
     user_controller:send_game_invitation_denied(Opponent, Invitation),
     {noreply, S};
 

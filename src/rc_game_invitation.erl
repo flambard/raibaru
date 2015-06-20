@@ -1,4 +1,4 @@
--module(game_invitation).
+-module(rc_game_invitation).
 
 %% API
 -export([ new/2
