@@ -1,4 +1,4 @@
--module(shell_user_adapter).
+-module(rc_shell_user_adapter).
 -behaviour(user_adapter).
 
 %% API
