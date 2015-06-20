@@ -1,5 +1,5 @@
 -module(rc_shell_user_adapter).
--behaviour(user_adapter).
+-behaviour(raibaru_user_adapter).
 
 %% API
 -export([ start/0

@@ -1,4 +1,4 @@
--module(user_adapter).
+-module(raibaru_user_adapter).
 
 %% API
 -export([]).

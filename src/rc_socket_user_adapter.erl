@@ -1,6 +1,6 @@
 -module(rc_socket_user_adapter).
 -behaviour(gen_server).
--behaviour(user_adapter).
+-behaviour(raibaru_user_adapter).
 
 %% API
 -export([ start/1
