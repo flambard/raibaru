@@ -1,4 +1,4 @@
-{application, raibaru,
+{application, raibaru_core,
  [{description, ""},
   {vsn, "0.0.1"},
   {registered, [ raibaru_sup
@@ -9,7 +9,7 @@
                , user_controller_sup
                , raibaru_matchmaker
                ]},
-  {mod, {raibaru_app, []}},
+  {mod, {raibaru_core_app, []}},
   {applications, [ kernel
                  , stdlib
                  , sasl

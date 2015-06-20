@@ -1,4 +1,4 @@
--module(raibaru_app).
+-module(raibaru_core_app).
 -behaviour(application).
 
 %% Application callbacks
