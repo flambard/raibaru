@@ -1,4 +1,4 @@
--module(game).
+-module(rc_game).
 -behaviour(gen_fsm).
 
 %% API

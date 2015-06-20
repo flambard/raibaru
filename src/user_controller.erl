@@ -144,7 +144,7 @@ handle_call({recv_game_invitation, Opponent, GameSettings, Color}, _From, S) ->
     {reply, {ok, Invitation}, S};
 
 handle_call({recv_move, Game, Move}, _From, S) ->
-    Reply = game:move(Game, Move),
+    Reply = rc_game:move(Game, Move),
     {reply, Reply, S};
 
 handle_call(_Request, _From, State) ->
