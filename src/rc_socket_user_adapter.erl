@@ -1,4 +1,4 @@
--module(socket_user_adapter).
+-module(rc_socket_user_adapter).
 -behaviour(gen_server).
 -behaviour(user_adapter).
 
