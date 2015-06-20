@@ -1,4 +1,4 @@
--module(user_controller_sup).
+-module(raibaru_user_controller_sup).
 -behaviour(supervisor).
 
 %% API

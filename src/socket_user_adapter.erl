@@ -84,7 +84,8 @@ send_move(SC, Game, Move) ->
 %% @end
 %%--------------------------------------------------------------------
 init([Socket]) ->
-    {ok, Pid} = user_controller_sup:start_user_controller(?MODULE, self()),
+    {ok, Pid} =
+        raibaru_user_controller_sup:start_user_controller(?MODULE, self()),
     ok = inet:setopts(Socket, [{active, once}]),
     {ok, #state{ user_controller = Pid
                , socket = Socket

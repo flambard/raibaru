@@ -46,12 +46,12 @@ init([]) ->
                supervisor,
                [raibaru_game_sup]},
 
-    UserControllerSup = {user_controller_sup,
-                         {user_controller_sup, start_link, []},
+    UserControllerSup = {raibaru_user_controller_sup,
+                         {raibaru_user_controller_sup, start_link, []},
                          permanent,
                          2000,
                          supervisor,
-                         [user_controller_sup]},
+                         [raibaru_user_controller_sup]},
 
 
     SocketListenerSup = {raibaru_socket_listener_sup,

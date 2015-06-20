@@ -88,7 +88,8 @@ send_move(Server, Game, Move) ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-    {ok, Pid} = user_controller_sup:start_user_controller(?MODULE, self()),
+    {ok, Pid} =
+        raibaru_user_controller_sup:start_user_controller(?MODULE, self()),
     {ok, #state{ user_controller = Pid
                , map = gnugo_game_map:new()
                }}.

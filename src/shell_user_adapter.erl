@@ -22,7 +22,7 @@
 %%%===================================================================
 
 start() ->
-    user_controller_sup:start_user_controller(?MODULE, self()).
+    raibaru_user_controller_sup:start_user_controller(?MODULE, self()).
 
 user_controller(UserController) ->
     UserController.

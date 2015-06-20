@@ -6,7 +6,7 @@
                , raibaru_room_sup
                , raibaru_game_sup
                , raibaru_socket_listener_sup
-               , user_controller_sup
+               , raibaru_user_controller_sup
                , raibaru_matchmaker
                ]},
   {mod, {raibaru_core_app, []}},
