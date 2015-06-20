@@ -33,7 +33,8 @@ find_match(UserController) ->
 
 start_game({Player1, _Info1}, {Player2, _Info2}) ->
     %% TODO: Use player info to determine boardsize, handicap, komi, ruleset.
-    game_sup:start_game(Player1, Player2, game_settings:new(), matchmaker),
+    Settings = game_settings:new(),
+    raibaru_game_sup:start_game(Player1, Player2, Settings, matchmaker),
     ok.
 
 

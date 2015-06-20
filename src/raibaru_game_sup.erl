@@ -1,4 +1,4 @@
--module(game_sup).
+-module(raibaru_game_sup).
 -behaviour(supervisor).
 
 %% API

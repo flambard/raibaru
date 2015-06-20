@@ -4,7 +4,7 @@
   {registered, [ raibaru_core_sup
                , raibaru_lobby
                , raibaru_room_sup
-               , game_sup
+               , raibaru_game_sup
                , socket_listener_sup
                , user_controller_sup
                , raibaru_matchmaker

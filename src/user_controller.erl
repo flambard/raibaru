@@ -177,15 +177,17 @@ handle_cast({recv_game_invitation_accept, Invitation}, S) ->
         end,
     case ChallengerColor of
         black ->
-            game_sup:start_game(game_invitation:challenger(Invitation),
-                                self(),
-                                game_invitation:game_settings(Invitation),
-                                {game_invitation, Invitation});
+            raibaru_game_sup:start_game(
+              game_invitation:challenger(Invitation),
+              self(),
+              game_invitation:game_settings(Invitation),
+              {game_invitation, Invitation});
         white ->
-            game_sup:start_game(self(),
-                                game_invitation:challenger(Invitation),
-                                game_invitation:game_settings(Invitation),
-                                {game_invitation, Invitation})
+            raibaru_game_sup:start_game(
+              self(),
+              game_invitation:challenger(Invitation),
+              game_invitation:game_settings(Invitation),
+              {game_invitation, Invitation})
     end,
     {noreply, S};
 

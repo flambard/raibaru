@@ -39,12 +39,12 @@ init([]) ->
                supervisor,
                [raibaru_room_sup]},
 
-    GameSup = {game_sup,
-               {game_sup, start_link, []},
+    GameSup = {raibaru_game_sup,
+               {raibaru_game_sup, start_link, []},
                permanent,
                2000,
                supervisor,
-               [game_sup]},
+               [raibaru_game_sup]},
 
     UserControllerSup = {user_controller_sup,
                          {user_controller_sup, start_link, []},
