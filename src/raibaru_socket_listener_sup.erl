@@ -33,12 +33,12 @@ init([]) ->
     spawn_link(fun initial_listeners/0),
 
     SupFlags = {simple_one_for_one, 1000, 3600},
-    ChildSpec = {socket_listener,
-                 {socket_listener, start_link, [ListenSocket]},
+    ChildSpec = {rc_socket_listener,
+                 {rc_socket_listener, start_link, [ListenSocket]},
                  temporary,
                  2000,
                  worker,
-                 [socket_listener]},
+                 [rc_socket_listener]},
 
     {ok, {SupFlags, [ChildSpec]}}.
 

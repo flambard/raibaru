@@ -1,4 +1,4 @@
--module(socket_listener).
+-module(rc_socket_listener).
 -behaviour(gen_server).
 
 %% API
