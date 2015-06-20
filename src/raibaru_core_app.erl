@@ -12,7 +12,7 @@
 
 start(_StartType, _StartArgs) ->
     raibaru_matchmaker:start(),
-    raibaru_sup:start_link().
+    raibaru_core_sup:start_link().
 
 stop(_State) ->
     ok.

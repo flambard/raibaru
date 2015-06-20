@@ -1,7 +1,7 @@
 {application, raibaru_core,
  [{description, ""},
   {vsn, "0.0.1"},
-  {registered, [ raibaru_sup
+  {registered, [ raibaru_core_sup
                , lobby
                , room_sup
                , game_sup

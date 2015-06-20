@@ -1,4 +1,4 @@
--module(raibaru_sup).
+-module(raibaru_core_sup).
 -behaviour(supervisor).
 
 %% API
