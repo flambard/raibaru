@@ -162,7 +162,7 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast({recv_say, Room, Message}, State) ->
-    ok = room:say(Room, Message),
+    ok = rc_room:say(Room, Message),
     {noreply, State};
 
 handle_cast(recv_find_match, State) ->

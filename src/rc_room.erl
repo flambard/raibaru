@@ -1,4 +1,4 @@
--module(room).
+-module(rc_room).
 -behaviour(gen_server).
 
 %% API
