@@ -91,7 +91,7 @@ init([]) ->
     {ok, Pid} =
         raibaru_user_controller_sup:start_user_controller(?MODULE, self()),
     {ok, #state{ user_controller = Pid
-               , map = gnugo_game_map:new()
+               , map = rc_gnugo_game_map:new()
                }}.
 
 
@@ -138,7 +138,7 @@ handle_cast({game_invitation, Invitation}, State) ->
 handle_cast({game_started, Game, GameSettings, Color, _Why}, S) ->
     %% TODO: Specify ruleset for GNU Go
     {ok, Ref} = gnugo:start(),
-    NewMap = gnugo_game_map:add(Game, Ref, Color, S#state.map),
+    NewMap = rc_gnugo_game_map:add(Game, Ref, Color, S#state.map),
     ok = gnugo:clear_board(Ref),
     ok = gnugo:boardsize(Ref, rc_game_settings:boardsize(GameSettings)),
     ok = gnugo:komi(Ref, rc_game_settings:komi(GameSettings)),
@@ -153,13 +153,13 @@ handle_cast({game_started, Game, GameSettings, Color, _Why}, S) ->
     {noreply, S#state{map = NewMap}};
 
 handle_cast({move, GameID, Move}, State = #state{map = Map}) ->
-    {GameID, Ref, Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
+    {GameID, Ref, Color} = rc_gnugo_game_map:find_gnugo_ref(GameID, Map),
     ok = gnugo:play(Ref, other_color(Color), Move),
     ok = gnugo:genmove_async(Ref, Color),
     {noreply, State};
 
 handle_cast({show_board, GameID}, State = #state{map = Map}) ->
-    {GameID, Ref, _Color} = gnugo_game_map:find_gnugo_ref(GameID, Map),
+    {GameID, Ref, _Color} = rc_gnugo_game_map:find_gnugo_ref(GameID, Map),
     ok = gnugo:showboard(Ref),
     {noreply, State};
 
@@ -181,12 +181,12 @@ handle_info({Ref, {data, {eol, Line}}}, State = #state{map = Map}) ->
     %% Received asynchronous reply from GNU Go.
     UC = State#state.user_controller,
     {ok, Move} = gnugo:receive_reply(Ref, [Line]),
-    {GameID, Ref, _Color} = gnugo_game_map:find_game_id(Ref, Map),
+    {GameID, Ref, _Color} = rc_gnugo_game_map:find_game_id(Ref, Map),
     ok = user_controller:recv_move(UC, GameID, Move),
     {noreply, State};
 
 handle_info({Ref, {exit_status, _Status}}, State = #state{map = Map}) ->
-    NewMap = gnugo_game_map:delete_gnugo_ref(Ref, Map),
+    NewMap = rc_gnugo_game_map:delete_gnugo_ref(Ref, Map),
     {noreply, State#state{map = NewMap}};
 
 handle_info(_Info, State) ->

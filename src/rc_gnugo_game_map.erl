@@ -1,4 +1,4 @@
--module(gnugo_game_map).
+-module(rc_gnugo_game_map).
 
 %% API
 -export([ new/0
