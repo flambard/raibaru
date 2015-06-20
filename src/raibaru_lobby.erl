@@ -1,4 +1,4 @@
--module(lobby).
+-module(raibaru_lobby).
 -behaviour(gen_server).
 
 %% API

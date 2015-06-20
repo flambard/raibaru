@@ -2,7 +2,7 @@
  [{description, ""},
   {vsn, "0.0.1"},
   {registered, [ raibaru_core_sup
-               , lobby
+               , raibaru_lobby
                , room_sup
                , game_sup
                , socket_listener_sup

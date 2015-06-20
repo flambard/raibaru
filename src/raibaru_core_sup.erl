@@ -25,12 +25,12 @@ start_link() ->
 init([]) ->
     SupFlags = {one_for_one, 1000, 3600},
 
-    Lobby = {lobby,
-             {lobby, start_link, []},
+    Lobby = {raibaru_lobby,
+             {raibaru_lobby, start_link, []},
              permanent,
              2000,
              worker,
-             [lobby]},
+             [raibaru_lobby]},
 
     RoomSup = {room_sup,
                {room_sup, start_link, []},
