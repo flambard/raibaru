@@ -1,8 +1,8 @@
 all:
-	erl -pa ebin/ -pa ../matchmaker/ebin -make
+	rebar compile
 
 clean:
-	rm ebin/*.beam
+	rebar clean
 
 dialyzer:
 	dialyzer ebin/ -r ../matchmaker/ebin -r ../gnugo/ebin
