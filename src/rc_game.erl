@@ -55,8 +55,8 @@ move(Game, Move) ->
 init([Player1, Player2, Settings, Why]) ->
     monitor(process, Player1),
     monitor(process, Player2),
-    user_controller:send_game_started(Player1, self(), Settings, black, Why),
-    user_controller:send_game_started(Player2, self(), Settings, white, Why),
+    rc_user_controller:send_game_started(Player1, self(), Settings, black, Why),
+    rc_user_controller:send_game_started(Player2, self(), Settings, white, Why),
     {ok, awaiting_move, #state{ settings = Settings
                               , black = Player1
                               , white = Player2
@@ -124,7 +124,7 @@ awaiting_move({move, Move}, {Pid, _Tag}, S) ->
                    #state{black = Pid} -> S#state.white;
                    #state{white = Pid} -> S#state.black
                end,
-    ok = user_controller:send_move(Opponent, self(), Move),
+    ok = rc_user_controller:send_move(Opponent, self(), Move),
     {reply, ok, awaiting_move, S#state{opponent_passed = Move =:= pass}}.
 
 

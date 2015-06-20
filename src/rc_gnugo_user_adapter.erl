@@ -132,7 +132,7 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast({game_invitation, Invitation}, State) ->
     UC = State#state.user_controller,
-    ok = user_controller:recv_game_invitation_accept(UC, Invitation),
+    ok = rc_user_controller:recv_game_invitation_accept(UC, Invitation),
     {noreply, State};
 
 handle_cast({game_started, Game, GameSettings, Color, _Why}, S) ->
@@ -182,7 +182,7 @@ handle_info({Ref, {data, {eol, Line}}}, State = #state{map = Map}) ->
     UC = State#state.user_controller,
     {ok, Move} = gnugo:receive_reply(Ref, [Line]),
     {GameID, Ref, _Color} = rc_gnugo_game_map:find_game_id(Ref, Map),
-    ok = user_controller:recv_move(UC, GameID, Move),
+    ok = rc_user_controller:recv_move(UC, GameID, Move),
     {noreply, State};
 
 handle_info({Ref, {exit_status, _Status}}, State = #state{map = Map}) ->

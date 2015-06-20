@@ -1,4 +1,4 @@
--module(user_controller).
+-module(rc_user_controller).
 -behaviour(gen_server).
 
 %% API
@@ -140,7 +140,7 @@ handle_call({create_room, Name}, _From, S) ->
 
 handle_call({recv_game_invitation, Opponent, GameSettings, Color}, _From, S) ->
     Invitation = rc_game_invitation:new(GameSettings, Color),
-    user_controller:send_game_invitation(Opponent, Invitation),
+    ?MODULE:send_game_invitation(Opponent, Invitation),
     {reply, {ok, Invitation}, S};
 
 handle_call({recv_move, Game, Move}, _From, S) ->
@@ -193,7 +193,7 @@ handle_cast({recv_game_invitation_accept, Invitation}, S) ->
 
 handle_cast({recv_game_invitation_deny, Invitation}, S) ->
     Opponent = rc_game_invitation:challenger(Invitation),
-    user_controller:send_game_invitation_denied(Opponent, Invitation),
+    ?MODULE:send_game_invitation_denied(Opponent, Invitation),
     {noreply, S};
 
 handle_cast({send_message, Message}, S = #user{module = M}) ->

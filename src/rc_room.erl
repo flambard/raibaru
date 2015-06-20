@@ -103,7 +103,7 @@ handle_call(_Request, _From, State) ->
 %%--------------------------------------------------------------------
 handle_cast({message, Message}, S = #room{users = Users}) ->
     lists:foreach(fun({User, _Monitor}) ->
-                          user_controller:send_message(User, Message)
+                          rc_user_controller:send_message(User, Message)
                   end,
                   Users),
     {noreply, S};
