@@ -54,12 +54,12 @@ init([]) ->
                          [user_controller_sup]},
 
 
-    SocketListenerSup = {socket_listener_sup,
-                         {socket_listener_sup, start_link, []},
+    SocketListenerSup = {raibaru_socket_listener_sup,
+                         {raibaru_socket_listener_sup, start_link, []},
                          permanent,
                          2000,
                          supervisor,
-                         [socket_listener_sup]},
+                         [raibaru_socket_listener_sup]},
 
     {ok, {SupFlags,
           [ Lobby

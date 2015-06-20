@@ -1,4 +1,4 @@
--module(socket_listener_sup).
+-module(raibaru_socket_listener_sup).
 -behaviour(supervisor).
 
 %% API
