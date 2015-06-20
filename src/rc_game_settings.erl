@@ -1,4 +1,4 @@
--module(game_settings).
+-module(rc_game_settings).
 
 %% API
 -export([ new/0

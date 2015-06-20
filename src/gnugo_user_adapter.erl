@@ -140,9 +140,9 @@ handle_cast({game_started, Game, GameSettings, Color, _Why}, S) ->
     {ok, Ref} = gnugo:start(),
     NewMap = gnugo_game_map:add(Game, Ref, Color, S#state.map),
     ok = gnugo:clear_board(Ref),
-    ok = gnugo:boardsize(Ref, game_settings:boardsize(GameSettings)),
-    ok = gnugo:komi(Ref, game_settings:komi(GameSettings)),
-    case game_settings:handicap(GameSettings) of
+    ok = gnugo:boardsize(Ref, rc_game_settings:boardsize(GameSettings)),
+    ok = gnugo:komi(Ref, rc_game_settings:komi(GameSettings)),
+    case rc_game_settings:handicap(GameSettings) of
         H when H >= 2 -> {ok, _Vs} = gnugo:fixed_handicap(Ref, H);
         _             -> ok
     end,
